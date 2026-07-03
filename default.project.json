@@ -8,6 +8,10 @@
         "$path": "Packages"
       },
       
+      "Data": {
+        "$path": "dev/Data.luau"
+      },
+      
       "Quill": {
         "$path": "src"
       }

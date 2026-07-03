@@ -3,15 +3,17 @@
 -- ## BASE ## --
 
 export type QuillBaseDisconnect = () -> ()
-export type QuillBaseCallback<T = any> = ( disconnect: QuillBaseDisconnect, old_value: T, value: T ) -> ()
-export type QuillBaseValue<T = any> = QuillBaseCallback<T> | T
+export type QuillBaseOnceCallback<T = any> = ( old_value: T, value: T ) -> ()
+export type QuillBaseConnectCallback<T = any> = ( disconnect: QuillBaseDisconnect, old_value: T, value: T ) -> ()
 
 export type QuillBase<T = any, M = any> = {
-    New: ( auto_replicate: QuillAutoReplicate, authority: QuillAuthority, meta_data: M, value: T ) -> Quill<T, M> & (( value: QuillBaseValue<T>? ) -> ()),
+    New: ( auto_replicate: QuillAutoReplicate, authority: QuillAuthority, meta_data: M, value: T ) -> Quill<T, M> & (( value: T? ) -> T),
     TypeEqual: ( quill1: Quill<T, M>, quill2: Quill<T, M> ) -> boolean,
+    Once: ( self: Quill<T, M>, callback: QuillBaseOnceCallback<T> ) -> QuillBaseDisconnect,
+    Connect: ( self: Quill<T, M>, callback: QuillBaseConnectCallback<T> ) -> QuillBaseDisconnect,
     
     __eq: ( quill1: Quill<T, M>, quill2: Quill<T, M> ) -> boolean,
-    __call: ( self: Quill<T, M>, value: QuillBaseValue<T>? ) -> T,
+    __call: ( self: Quill<T, M>, value: T? ) -> T,
     __index: QuillBase<T, M>?
 }
 
@@ -26,7 +28,13 @@ export type Quill<T = any, M = any> = typeof(setmetatable({} :: {
     meta_data: M,
     value: T,
     
-    _callbacks: { QuillBaseCallback<T> }
+    _callbacks: {
+        {
+            callback: QuillBaseOnceCallback<T> | QuillBaseConnectCallback<T>,
+            disconnect: QuillBaseDisconnect,
+            once: boolean
+        }
+    }
 }, {} :: QuillBase<T, M>)) & QuillBase<T, M>
 
 -- // MAIN // --

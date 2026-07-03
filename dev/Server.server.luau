@@ -2,22 +2,20 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 -- // MODULES // --
-local QuillNumber = require(ReplicatedStorage.Quill.QuillNumber)
+local Quill = require(ReplicatedStorage.Quill)
 
 -- // MAIN // --
 
-local quill1 = QuillNumber.New(true, "server", "u8", 0)
-local quill2 = QuillNumber.New(false, "client", "u8", 50)
+local quill1 = Quill.Number.New(true, "server", "u8", 0)
+local quill2 = Quill.Number.New(false, "client", "u8", 50)
 
-quill1(function(disconnect, old_value, value)
+quill1:Once(function(old_value, value)
     warn(`quill1: {old_value} -> {value}`)
     
     quill2(old_value)
-    
-    disconnect()
 end)
 
-quill2(function(disconnect, old_value, value)
+quill2:Once(function(old_value, value)
     warn(`quill2: {old_value} -> {value}`)
 end)
 
