@@ -1,0 +1,10 @@
+[package]
+name = "qullzz/quill"
+version = "0.0.0"
+registry = "https://github.com/UpliftGames/wally-index"
+realm = "shared"
+
+exclude = ["dev"]
+
+[dependencies]
+ProfileStore = "detourious/loleris-profilestore@1.0.0"
