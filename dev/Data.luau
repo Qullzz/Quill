@@ -14,7 +14,7 @@ return Quill.Init({
         },
         
         current_template = {
-            level = Quill.Number.New(true, "client", "u8", 0)
+            level = Quill.Number.New(true, "server", "u8", 0)
         }
     }
 })

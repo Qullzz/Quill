@@ -1,4 +1,3 @@
-local RunService = game:GetService("RunService")
 -- // MODULES // --
 local QuillServiceTypes = require("../QuillServiceTypes")
 
@@ -127,7 +126,7 @@ Module = {
     end,
     
     __call = function(self, value, replicate)
-        if ( RunService:IsServer() or ( self.authority == "client" ) == RunService:IsClient() ) and typeof(value) == typeof(self.value) and value ~= self.value then
+        if typeof(value) == typeof(self.value) and value ~= self.value then
             local old_value = self.value
             
             self.value = value

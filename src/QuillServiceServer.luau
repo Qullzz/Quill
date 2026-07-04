@@ -230,14 +230,6 @@ function Module.Init(self: Module, properties: QuillServiceTypes.Properties): Qu
         end
     })
     
-    -- for _, player in Players:GetPlayers() do
-    --     self:PlayerAdded(player)
-    -- end
-    
-    -- Players.PlayerAdded:Connect(function(player)
-    --     self:PlayerAdded(player)
-    -- end)
-    
     Players.PlayerRemoving:Connect(function(player)
         self:PlayerRemoving(player)
     end)
@@ -264,8 +256,6 @@ function Module.Init(self: Module, properties: QuillServiceTypes.Properties): Qu
         if not value or value.quill.authority ~= "client" then return end
         
         value.quill(value.quill:Deserialize(_data.data))
-        
-        print(value.quill())
     end)
     
     return self.PlayersData
