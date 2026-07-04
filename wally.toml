@@ -7,4 +7,3 @@ realm = "shared"
 exclude = ["dev"]
 
 [dependencies]
-ProfileStore = "detourious/loleris-profilestore@1.0.0"

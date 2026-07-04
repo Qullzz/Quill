@@ -2,22 +2,12 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 -- // MODULES // --
-local Quill = require(ReplicatedStorage.Quill)
+local Data = require(ReplicatedStorage.Data)
 
 -- // MAIN // --
 
-local quill1 = Quill.Number.New(true, "server", "u8", 0)
-local quill2 = Quill.Number.New(false, "client", "u8", 50)
+local data = Data[game:GetService("Players").PlayerAdded:Wait()]
 
-quill1:Once(function(old_value, value)
-    warn(`quill1: {old_value} -> {value}`)
-    
-    quill2(old_value)
+data.level:Connect(function(_, prev_level, level)
+    warn(`{prev_level} -> {level}`)
 end)
-
-quill2:Once(function(old_value, value)
-    warn(`quill2: {old_value} -> {value}`)
-end)
-
-print(quill1(50))
-print(quill1() == quill2(quill1()))

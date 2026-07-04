@@ -8,6 +8,11 @@ version = "1.0.0"
 dependencies = []
 
 [[package]]
+name = "qullzz/callnet"
+version = "0.0.2"
+dependencies = []
+
+[[package]]
 name = "qullzz/quill"
 version = "0.0.0"
-dependencies = [["ProfileStore", "detourious/loleris-profilestore@1.0.0"]]
+dependencies = [["Callnet", "qullzz/callnet@0.0.2"], ["ProfileStore", "detourious/loleris-profilestore@1.0.0"]]
