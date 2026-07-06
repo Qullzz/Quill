@@ -8,6 +8,6 @@ local Data = require(ReplicatedStorage.Data)
 
 local data = Data[game:GetService("Players").LocalPlayer]
 
-data.level:Connect(function(_, prev_level, level)
-    warn(`{prev_level} -> {level}`)
+data.rank:Connect(function(_, prev_rank, rank)
+    warn(`{prev_rank} -> {rank}`)
 end)

@@ -1,7 +1,6 @@
 --!native
 --!optimize 2
 local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local types = require(script.Parent.Parent.types)
@@ -89,12 +88,12 @@ function serverProcess.start()
 	local reliableRemote = Instance.new("RemoteEvent")
 	reliableRemote.Name = "CallNetReliable"
 	reliableRemote.OnServerEvent:Connect(onServerEvent)
-	reliableRemote.Parent = ReplicatedStorage
+	reliableRemote.Parent = script.Parent.Parent
 
 	local unreliableRemote = Instance.new("UnreliableRemoteEvent")
 	unreliableRemote.Name = "CallNetUnreliable"
 	unreliableRemote.OnServerEvent:Connect(onServerEvent)
-	unreliableRemote.Parent = ReplicatedStorage
+	unreliableRemote.Parent = script.Parent.Parent
 
 	for _, player in Players:GetPlayers() do
 		playerAdded(player)

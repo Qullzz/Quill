@@ -1,4 +1,3 @@
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local replicatedValue = require(script.Parent.replicatedValue)
@@ -15,11 +14,11 @@ function values.start()
 	if runContext == "server" then
 		local storage = Instance.new("Folder")
 		storage.Name = "CallNetStorage"
-		storage.Parent = ReplicatedStorage
+		storage.Parent = script.Parent.Parent
 
 		valueFolder = storage
 	elseif runContext == "client" then
-		valueFolder = ReplicatedStorage:WaitForChild("CallNetStorage")
+		valueFolder = script.Parent.Parent:WaitForChild("CallNetStorage")
 	end
 end
 

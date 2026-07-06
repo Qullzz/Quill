@@ -38,7 +38,7 @@ export type Quill<T = any, M = any> = typeof(setmetatable({} :: {
             once: boolean
         }
     }
-}, {} :: QuillBase<T, M>)) & QuillBase<T, M> & (( value: T? ) -> T)
+}, {} :: QuillBase<T, M>)) & QuillBase<T, M> & (( value: T?, replicate: boolean? ) -> T)
 
 -- ## PROPERTIES ## --
 

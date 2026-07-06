@@ -1,4 +1,3 @@
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local types = require(script.Parent.Parent.types)
@@ -45,10 +44,10 @@ function clientProcess.sendUnreliable(id: number, writer: (value: any) -> (), da
 end
 
 function clientProcess.start()
-	local reliableRemote = ReplicatedStorage:WaitForChild("CallNetReliable")
+	local reliableRemote = script.Parent.Parent:WaitForChild("CallNetReliable")
 	reliableRemote.OnClientEvent:Connect(onClientEvent)
 
-	local unreliableRemote = ReplicatedStorage:WaitForChild("CallNetUnreliable")
+	local unreliableRemote = script.Parent.Parent:WaitForChild("CallNetUnreliable")
 	unreliableRemote.OnClientEvent:Connect(onClientEvent)
 
 	RunService.Heartbeat:Connect(function()
