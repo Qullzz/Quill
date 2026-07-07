@@ -1,0 +1,2 @@
+ - Remove IDs and make it so a unique ID is generate for a template dynamically depending on it's layout
+ - Fix a bug where :Wait() and :Do() methods don't drop when the player leaves

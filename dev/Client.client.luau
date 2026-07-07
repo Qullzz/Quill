@@ -9,8 +9,8 @@ local Data = require(ReplicatedStorage.Data)
 
 local data = Data[Players.LocalPlayer]
 
-data.rank:Connect(function()
-    warn("ADDED RANK:", data.rank())
+data.rank:Connect(function(rank)
+    warn("ADDED RANK:", rank)
 end)
 
 data:Wait()

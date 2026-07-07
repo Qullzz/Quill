@@ -1,9 +1,13 @@
 [package]
 name = "qullzz/quill"
+authors = ["Qullzz"]
+license = "MIT"
+description = "Handle data in a charm-like way, includes serializing, deserializing, built-in replication and more!"
 version = "0.0.0"
 registry = "https://github.com/UpliftGames/wally-index"
 realm = "shared"
 
-exclude = ["dev"]
+exclude = ["**"]
+include = ["src", "src/*", "default.project.json", "wally.toml", "wally.lock", "LICENSE"]
 
 [dependencies]

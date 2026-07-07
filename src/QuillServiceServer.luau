@@ -340,7 +340,7 @@ function Module.Init(self: Module, properties: QuillServiceTypes.Properties): Qu
         
         if not value or value.quill.authority ~= "client" then return end
         
-        value.quill(value.quill:Deserialize(_data.data))
+        value.quill(value.quill:Deserialize(_data.data), _data.replicate)
     end)
     
     return self.PlayersData

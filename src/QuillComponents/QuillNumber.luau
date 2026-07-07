@@ -133,11 +133,11 @@ Module = {
             
             for _, callback in ipairs(self._callbacks) do
                 if callback.once then
-                    callback.callback(old_value, value)
+                    callback.callback(value, old_value, replicate)
                     
                     callback.disconnect()
                 else
-                    callback.callback(callback.disconnect, old_value, value, replicate)
+                    callback.callback(value, old_value, callback.disconnect, replicate)
                 end
             end
         end

@@ -34,6 +34,7 @@ return Callnet.defineNamespace("__QuillService", function()
             reliabilityType = "reliable",
             value = Callnet.struct({
                 index = Callnet.uint16,
+                replicate = Callnet.optional(Callnet.bool),
                 data = data
             })
         }),

@@ -99,12 +99,13 @@ function Module.BindPlayerDataReplication(self: Module, player: Player)
     for index, value in ipairs(schema) do
         local quill = value.quill
         
-        quill:Connect(function(_, _, value, _)
+        quill:Connect(function(_, _, value, replicate)
             
             if quill.authority ~= "client" then return end
             
             QuillServiceNetwork.QuillChangedClient.send({
                 index = index,
+                replicate = replicate,
                 data = quill:Serialize()
             })
         end)
