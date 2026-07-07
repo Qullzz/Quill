@@ -1,10 +1,15 @@
+# QuillComponent
+
+A `QuillComponent` is a component that creates Quills serving as a custom data type and can be used for player data (like numbers, strings, enums, vectors, cframes, arrays, dictionaries...). `QuillComponents` are structured like the following:
+
+```lua title="QuillComponent.luau"
 -- // MODULES // --
-local QuillServiceTypes = require("../QuillServiceTypes")
+local QuillServiceTypes = require(PATH.TO.QuillServiceTypes)
 
 -- // TYPES // --
 
-type Type = number
-type Metadata = "u8" | "u16" | "u32" | "i8" | "i16" | "i32" | "f32" | "f64"
+type Type = *Some Roblox type here*
+type Metadata = *Custom metadata here*
 
 -- // MAIN // --
 
@@ -69,31 +74,9 @@ Module = {
     end,
     
     Serialize = function(self)
-        local size =
-            ( ( self.meta_data == "u8" or self.meta_data == "i8" ) and 1 )
-            or ( ( self.meta_data == "u16" or self.meta_data == "i16" ) and 2 )
-            or ( ( self.meta_data == "u32" or self.meta_data == "i32" or self.meta_data == "f32" ) and 4 )
-            or 8
+        local size = some_size
         
         local result = buffer.create(size)
-        
-        if self.meta_data == "u8" then
-            buffer.writeu8(result, 0, self())
-        elseif self.meta_data == "u16" then
-            buffer.writeu16(result, 0, self())
-        elseif self.meta_data == "u32" then
-            buffer.writeu32(result, 0, self())
-        elseif self.meta_data == "i8" then
-            buffer.writei8(result, 0, self())
-        elseif self.meta_data == "i16" then
-            buffer.writei16(result, 0, self())
-        elseif self.meta_data == "i32" then
-            buffer.writei32(result, 0, self())
-        elseif self.meta_data == "f32" then
-            buffer.writef32(result, 0, self())
-        else
-            buffer.writef64(result, 0, self())
-        end
         
         return result
     end,
@@ -101,23 +84,7 @@ Module = {
     Deserialize = function(self, buff)
         local result = self()
         
-        if self.meta_data == "u8" then
-            result = buffer.readu8(buff, 0)
-        elseif self.meta_data == "u16" then
-            result = buffer.readu16(buff, 0)
-        elseif self.meta_data == "u32" then
-            result = buffer.readu32(buff, 0)
-        elseif self.meta_data == "i8" then
-            result = buffer.readi8(buff, 0)
-        elseif self.meta_data == "i16" then
-            result = buffer.readi16(buff, 0)
-        elseif self.meta_data == "i32" then
-            result = buffer.readi32(buff, 0)
-        elseif self.meta_data == "f32" then
-            result = buffer.readf32(buff, 0)
-        else
-            result = buffer.readf64(buff, 0)
-        end
+        result = buffer.read(buff)
         
         return result
     end,
@@ -148,5 +115,32 @@ Module = {
 }
 
 Module.__index = Module
+```
 
-return Module
+### `.New(auto_replicate, authority, meta_data, value) -> Quill`
+
+Creates and returns a new Quill.
+
+### `:Clone(self) -> Quill`
+
+Clones a Quill.
+
+### `:Once(self, callback) -> disconnect`
+
+Connects to a Quill changed event, disconnect immediately after the first one.
+
+### `:Connect(self, callback) -> disconnect`
+
+Connects to a Quill changed event.
+
+### `:TypeEqual(quill1, quill2) -> boolean`
+
+Check for type equality between to Quills.
+
+### `:Serialize(self) -> buffer`
+
+Serialize a Quill, return a buffer that describes it.
+
+### `Deserialize(self, buffer) -> Quill`
+
+Deserialize a Quill, receive

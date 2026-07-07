@@ -2,7 +2,8 @@
 
 Quill is a schema-based player data system that wraps ProfileStore. It includes serializing, deserializing, built-in data replication and more. It shines when dealing with a large data.
 
-The syntax is similar to charm's
+#### Quill relies on `Quills` that are made by `QuillComponents`, which are custom types to Quill.
+#### It's encouraged to make your own `QuillComponent` for complex data types.
 
 ## Fundamental usage
 
@@ -20,12 +21,16 @@ print(data.rank()) -- Prints 3!
 ```
 
 :::warning
-If the player data hasn't loaded yet, a default template will be created and returned, once the player data is fully loaded, it'll replace the values with the loaded ones. NOTE THAT THIS WILL TRIGGER A CHANGED EVENT.
+If the player data hasn't loaded yet, a default template will be created and returned, once the player data is fully loaded, it'll replace the values with the loaded ones.
+:::
+
+:::note
+When the player data fully loads in and the values get replaced with the stored ones, this WILL trigger a changed event.
 :::
 
 ## What does it do?
 
-- Serializes & Deserializes player data to reduce its size
+- Compresses player data to reduce its size
 - Replicates data changes between the server and clients as you wish
 - Converts outdated player data to match the new one
 - It requires a template for player data, it'll serve as both a default player data and a schema
@@ -95,7 +100,7 @@ Templates must have `keys` that are strings and `values` that are Quills.
 they do NOT accept values that are NOT Quills.
 :::
 
-:::important
+:::note
 It's suggested to have the `id`s as integers. They also should be incremented by 1's to avoid confusion
 :::
 
@@ -105,15 +110,22 @@ It's suggested to have the `id`s as integers. They also should be incremented by
 
 ```lua
 local Data = require(PATH.TO.DATA)
+
+local rank = Data[player].rank() -- Gets rank
+local new_rank = Data[player].rank(50) -- Sets rank and returns the new value
 ```
 
 # Syntax
 
-This section explains the syntax of the package
+This section explains the syntax `Quill`.
 
 ## Waiting for data
 
 The player's data might not be available right away, therefore you have to wait for it to load:
+
+### `:Do(callback)`
+
+Receives a callback and calls it once the player data is fully loaded!
 
 ```lua title=":Do()"
 local Data = require(PATH.TO.DATA)
@@ -127,6 +139,10 @@ local data = Data[player]:Do(function() -- Calls the callback once the player da
     print(data.rank()) -- Prints 3!
 end)
 ```
+
+### `:Wait()`
+
+Yields the current thread until the data is fully loaded!
 
 ```lua title=":Wait()"
 local Data = require(PATH.TO.DATA)
@@ -208,7 +224,7 @@ end
 
 ```
 
-# Quill Properties
+## Quill Properties
 
 ### auto_replicate: `boolean`
 
@@ -224,11 +240,11 @@ Determines who has the authority over the Quill
  - `Server`: Only modifications from it will be saved and replicated.
  - `Client`: The client will be able to modify the Quill locally and replicate changes to the server, replicating to other clients afterwards.
 
-# QuillComponents
+## Templates
 
-`Templates` are a string-keyed dictionaries with Quills as values. A `QuillComponent` is a built-in component that's needed for basic player data usage (like numbers, strings, enums, vectors, cframes, arrays, dictionaries...). `QuillComponents` expose a `:New()` method that returns a Quill, you can make your own component if you wish.
+`Templates` are a string-keyed dictionaries with Quills as values.
 
-# Properties
+## Properties
 
 | Option | Description |
 | --- | --- |

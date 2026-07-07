@@ -1,0 +1,21 @@
+title = "Quill"
+
+classOrder = ["Quill"]
+
+[home]
+enabled = true
+
+[[home.features]]
+title = "Compression"
+description = "Compress Player Data"
+image = "Compress.png"
+
+[[home.features]]
+title = "Replication"
+description = "Replicate Player Data"
+image = "Replicate.png"
+
+[[home.features]]
+title = "Signals"
+description = "Listen for changes"
+image = "Signal.png"
