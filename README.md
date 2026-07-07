@@ -4,7 +4,6 @@ A schema-based player data for efficient saving, supported by built-in replicati
 
 ## Documentation
 
-- [Getting started]()
-- [Complete API reference]()
+- [Getting started](https://Qullzz.github.io/Quill/docs/intro)
 
 The API reference exists to guide the ones who are new to the package.
