@@ -7,6 +7,7 @@ local QuillProfileStore = require("./Dependencies/QuillProfileStore")
 local QuillServiceTypes = require("./QuillServiceTypes")
 local QuillServiceUtility = require("./QuillServiceUtility")
 local QuillServiceNetwork = require("./QuillServiceNetwork")
+local QuillSignal = require("./Dependencies/QuillSignal")
 
 -- // TYPES // --
 
@@ -18,20 +19,24 @@ local Module = {
     Properties = {} :: QuillServiceTypes.Properties,
     PlayersData = {} :: QuillServiceTypes.PlayersData,
     LoadedPlayers = {} :: { Player },
+    LoadedProfiles = {} :: { Player },
     Store = {} :: QuillProfileStore.ProfileStore<{ ID: number, Data: buffer }>,
-    Profiles = {} :: { [Player]: Profile }
+    Profiles = {} :: { [Player]: Profile },
+    
+    ProfileAdded = QuillSignal.new() :: QuillSignal.ScriptSignal<Player>,
+    ProfileRemoved = QuillSignal.new() :: QuillSignal.ScriptSignal<Player>
 }
 
 -- ## PRIVATE ## --
 
-local function GetProfileKeyFromPlayer(player: Player)
+function GetProfileKeyFromPlayer(player: Player)
     return tostring(player.UserId)
 end
 
-local function GetPlayerDataTemplateDeltas(template: QuillServiceTypes.PlayerData, data: QuillServiceTypes.PlayerData)
+function GetPlayerDataTemplateDeltas(template: QuillServiceTypes.PlayerData, data: QuillServiceTypes.PlayerData)
     local result = {}
     
-    for key, quill in data do
+    for key, quill in pairs(data) do
         local template_quill = template[key]
         
         if not template_quill then continue end
@@ -49,12 +54,14 @@ end
 function Module.RegisterPlayer(self: Module, player: Player, profile: Profile)
     self.Profiles[player] = profile
     
+    table.insert(self.LoadedProfiles, player)
+    
     local template = self:GetTemplateFromID(profile.Data.ID)
     
     local data = QuillServiceUtility.DeserializePlayerData(template, profile.Data.Data)
     local deltas = GetPlayerDataTemplateDeltas(template, self.PlayersData[player])
     
-    for key, value in deltas do
+    for key, value in pairs(deltas) do
         local quill = data[key]
         
         if not quill then continue end
@@ -63,12 +70,18 @@ function Module.RegisterPlayer(self: Module, player: Player, profile: Profile)
     end
     
     self:SetPlayerData(player, data)
+    
+    self.ProfileAdded:Fire(player)
 end
 
 function Module.UnregisterPlayer(self: Module, player: Player)
     self.Profiles[player] = nil
     
+    table.remove(self.LoadedProfiles, table.find(self.LoadedProfiles, player))
+    
     self:SetPlayerData(player, nil)
+    
+    self.ProfileRemoved:Fire(player)
 end
 
 function Module.PlayerAdded(self: Module, player: Player)
@@ -116,7 +129,7 @@ function Module.PlayerAdded(self: Module, player: Player)
         data = QuillServiceUtility.SerializePlayerData(self.PlayersData[player])
     }, self.LoadedPlayers)
     
-    for thisPlayer, thisData in self.PlayersData do
+    for thisPlayer, thisData in pairs(self.PlayersData) do
         
         if thisPlayer == player then continue end
         
@@ -138,7 +151,7 @@ function Module.BindPlayerDataReplication(self: Module, player: Player)
     
     local schema = QuillServiceUtility.GetTemplateSchema(data)
     
-    for index, value in schema do
+    for index, value in ipairs(schema) do
         local quill = value.quill
         
         quill:Connect(function(_, _, value, replicate)
@@ -169,7 +182,7 @@ function Module.SetPlayerData(self: Module, player: Player, data: QuillServiceTy
         local current_data = rawget(self.PlayersData, player)
         
         if current_data then
-            for key, current_quill in current_data do
+            for key, current_quill in pairs(current_data) do
                 local quill = data[key]
                 
                 if not quill or not current_quill:TypeEqual(quill) or current_quill == quill then continue end
@@ -190,7 +203,7 @@ function Module.GetTemplateFromID(self: Module, id: QuillServiceTypes.PlayerData
     if id == self.Properties.id then
         result = self.Properties.templates.current_template
     else
-        for _, template in self.Properties.templates.old_templates do
+        for _, template in ipairs(self.Properties.templates.old_templates) do
             
             if id ~= template.id then continue end
             
@@ -216,6 +229,27 @@ function Module.Init(self: Module, properties: QuillServiceTypes.Properties): Qu
     )
     
     setmetatable(self.PlayersData, {
+        __call = function(_, player: Player, callback: (( data: QuillServiceTypes.PlayerData ) -> ())?)
+            if typeof(callback) == "function" then
+                if table.find(self.LoadedProfiles, player) then
+                    callback(self.PlayersData[player])
+                else
+                    local connection
+                    
+                    connection = self.ProfileAdded:Connect(function(thisPlayer: Player)
+                        
+                        if thisPlayer ~= player then return end
+                        
+                        callback(self.PlayersData[player])
+                        
+                        connection:Disconnect()
+                    end)
+                end
+            end
+            
+            return self.PlayersData[player]
+        end,
+        
         __index = function(_, player: Player)
             assert(
                 typeof(player) == "Instance" and player:IsA("Player"),

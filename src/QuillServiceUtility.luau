@@ -8,7 +8,7 @@ local Module = {}
 function Module.GetTemplateSchema(template: QuillServiceTypes.PlayerData): { { key: QuillServiceTypes.PlayerDataKey, quill: QuillServiceTypes.Quill } }
     local keys: { QuillServiceTypes.PlayerDataKey } = {}
     
-    for key, _ in template do
+    for key, _ in pairs(template) do
         table.insert(keys, key)
     end
     
@@ -18,7 +18,7 @@ function Module.GetTemplateSchema(template: QuillServiceTypes.PlayerData): { { k
     
     local result = {}
     
-    for index, key in keys do
+    for index, key in ipairs(keys) do
         result[index] = { key = key, quill = template[key] }
     end
     
@@ -31,7 +31,7 @@ function Module.SerializePlayerData(data: QuillServiceTypes.PlayerData): buffer
     local total_size = 0
     local buffs = {}
     
-    for _, value in schema do
+    for _, value in ipairs(schema) do
         local buff = value.quill:Serialize()
         
         total_size += buffer.len(buff)
@@ -43,7 +43,7 @@ function Module.SerializePlayerData(data: QuillServiceTypes.PlayerData): buffer
     
     local offset = 0
     
-    for _, buff in buffs do
+    for _, buff in ipairs(buffs) do
         local size = buffer.len(buff)
         
         buffer.copy(result, offset, buff)
@@ -61,7 +61,7 @@ function Module.DeserializePlayerData(template: QuillServiceTypes.PlayerData, da
     
     local offset = 0
     
-    for _, value in schema do
+    for _, value in ipairs(schema) do
         local quill = result[value.key]
         
         local size = buffer.len(quill:Serialize())
@@ -80,7 +80,7 @@ end
 function Module.CopyTemplate(template: QuillServiceTypes.PlayerData): QuillServiceTypes.PlayerData
     local result: QuillServiceTypes.PlayerData = {}
     
-    for key, quill in template do
+    for key, quill in pairs(template) do
         result[key] = quill:Clone()
     end
     

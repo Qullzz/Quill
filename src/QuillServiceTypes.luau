@@ -53,7 +53,7 @@ export type Properties<T = {}> = {
             {
                 id: PlayerDataID,
                 
-                template: PlayerData
+                template: PlayerData<{}>
             }
         },
         

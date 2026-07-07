@@ -131,7 +131,7 @@ Module = {
             
             self.value = value
             
-            for _, callback in self._callbacks do
+            for _, callback in ipairs(self._callbacks) do
                 if callback.once then
                     callback.callback(old_value, value)
                     
