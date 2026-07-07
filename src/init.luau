@@ -6,9 +6,16 @@ local QuillServiceTypes = require(script.QuillServiceTypes)
 
 -- // TYPES // --
 
-type PlayersData<T> = typeof(setmetatable({} :: QuillServiceTypes.PlayersData<T>, {} :: {
-    __call: ( self: QuillServiceTypes.PlayersData<T>, player: Player, callback: (( data: QuillServiceTypes.PlayerData<T> ) -> QuillServiceTypes.PlayerData<T>)? ) -> ()
-})) & ( player: Player, callback: (( data: QuillServiceTypes.PlayerData<T> ) -> ())? ) -> QuillServiceTypes.PlayerData<T>
+type PlayersData<T> = QuillServiceTypes.PlayersData<T & {
+    --[[
+    Calls the callback the moment the player's data is loaded, passing it as an argument
+    ]]
+    Do: ( self: QuillServiceTypes.PlayerData<T>, callback: ( data: QuillServiceTypes.PlayerData<T> ) -> () ) -> (),
+    --[[
+    Yields the current thread until the player's data is loaded
+    ]]
+    Wait: ( self: QuillServiceTypes.PlayerData<T> ) -> QuillServiceTypes.PlayerData<T>
+}>
 
 -- // MAIN // --
 

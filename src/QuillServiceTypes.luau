@@ -3,8 +3,8 @@
 -- ## BASE ## --
 
 export type QuillBaseDisconnect = () -> ()
-export type QuillBaseOnceCallback<T = any> = ( prev_value: T, value: T, replicate: boolean ) -> ()
-export type QuillBaseConnectCallback<T = any> = ( disconnect: QuillBaseDisconnect, prev_value: T, value: T, replicate: boolean ) -> ()
+export type QuillBaseOnceCallback<T = any> = ( prev_value: T, value: T, replicate: boolean? ) -> ()
+export type QuillBaseConnectCallback<T = any> = ( disconnect: QuillBaseDisconnect, prev_value: T, value: T, replicate: boolean? ) -> ()
 
 export type QuillBase<T = any, M = any> = {
     New: ( auto_replicate: QuillAutoReplicate, authority: QuillAuthority, meta_data: M, value: T ) -> Quill<T, M>,

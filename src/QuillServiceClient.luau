@@ -18,7 +18,76 @@ local Module = {
     ProfileRemoved = QuillSignal.new() :: QuillSignal.ScriptSignal<Player>
 }
 
+local PlayerDataModule = {}
+PlayerDataModule.__index = PlayerDataModule
+
 -- ## PRIVATE ## --
+
+function PlayerDataModule.Do(self: QuillServiceTypes.PlayerData, callback: ( QuillServiceTypes.PlayerData ) -> ()): ()
+    local player: Player
+    
+    for thisPlayer, data in pairs(Module.PlayersData) do
+        
+        if data ~= self then continue end
+        
+        player = thisPlayer
+    end
+    
+    assert(
+        typeof(player) == "Instance" and player:IsA("Player"),
+        `Attempted to call method on a non-registered PlayerData`
+    )
+    
+    if table.find(Module.LoadedProfiles, player) then
+        callback(Module.PlayersData[player])
+    else
+        local connection
+        
+        connection = Module.ProfileAdded:Connect(function(thisPlayer: Player)
+            
+            if thisPlayer ~= player then return end
+            
+            connection:Disconnect()
+            
+            callback(Module.PlayersData[player])
+        end)
+    end
+end
+
+function PlayerDataModule.Wait(self: QuillServiceTypes.PlayerData): QuillServiceTypes.PlayerData
+    local player: Player
+    
+    for thisPlayer, data in pairs(Module.PlayersData) do
+        
+        if data ~= self then continue end
+        
+        player = thisPlayer
+    end
+    
+    assert(
+        typeof(player) == "Instance" and player:IsA("Player"),
+        `Attempted to call method on a non-registered PlayerData`
+    )
+    
+    local thread = coroutine.running()
+    
+    if not table.find(Module.LoadedProfiles, player) then
+        local connection
+        
+        connection = Module.ProfileAdded:Connect(function(thisPlayer: Player)
+            
+            if thisPlayer ~= player then return end
+            
+            connection:Disconnect()
+            
+            coroutine.resume(thread, Module.PlayersData[player])
+        end)
+        
+        return coroutine.yield(thread)
+    end
+    
+    return Module.PlayersData[player]
+end
 
 -- ## PUBLIC ## --
 
@@ -30,7 +99,7 @@ function Module.BindPlayerDataReplication(self: Module, player: Player)
     for index, value in ipairs(schema) do
         local quill = value.quill
         
-        quill:Connect(function(_, _, value, replicate)
+        quill:Connect(function(_, _, value, _)
             
             if quill.authority ~= "client" then return end
             
@@ -55,7 +124,7 @@ function Module.SetPlayerData(self: Module, player: Player, data: QuillServiceTy
                 current_quill(quill())
             end
         else
-            self.PlayersData[player] = data
+            self.PlayersData[player] = setmetatable(data, PlayerDataModule) :: any
         end
     else
         self.PlayersData[player] = nil
@@ -66,23 +135,6 @@ function Module.Init(self: Module, properties: QuillServiceTypes.Properties): Qu
     self.Properties = properties
     
     setmetatable(self.PlayersData, {
-        __call = function(_, player: Player, callback: ( data: QuillServiceTypes.PlayerData ) -> ())
-            if table.find(self.LoadedProfiles, player) then
-                callback(self.PlayersData[player])
-            else
-                local connection
-                
-                connection = self.ProfileAdded:Connect(function(thisPlayer: Player)
-                    
-                    if thisPlayer ~= player then return end
-                    
-                    callback(self.PlayersData[player])
-                    
-                    connection:Disconnect()
-                end)
-            end
-        end,
-        
         __index = function(_, player: Player)
             assert(
                 typeof(player) == "Instance" and player:IsA("Player"),

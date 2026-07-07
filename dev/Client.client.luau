@@ -1,4 +1,5 @@
 -- // SERVICES // --
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 -- // MODULES // --
@@ -6,12 +7,17 @@ local Data = require(ReplicatedStorage.Data)
 
 -- // MAIN // --
 
-Data(game:GetService("Players").LocalPlayer, function(data)
-    print("Data loaded:", data)
+local data = Data[Players.LocalPlayer]
+
+data.rank:Connect(function()
+    warn("ADDED RANK:", data.rank())
 end)
 
--- local data = Data[game:GetService("Players").LocalPlayer]
+data:Wait()
 
--- data.rank:Connect(function(_, prev_rank, rank)
---     warn(`{prev_rank} -> {rank}`)
--- end)
+print("Data loaded:", data)
+
+data:Do(function(data)
+    data:Wait()
+    warn("Data loaded", data)
+end)

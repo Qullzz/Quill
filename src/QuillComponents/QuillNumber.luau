@@ -137,7 +137,7 @@ Module = {
                     
                     callback.disconnect()
                 else
-                    callback.callback(callback.disconnect, old_value, value, replicate == true)
+                    callback.callback(callback.disconnect, old_value, value, replicate)
                 end
             end
         end
