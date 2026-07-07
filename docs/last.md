@@ -3,15 +3,10 @@
 A `QuillComponent` is a component that creates Quills serving as a custom data type and can be used for player data (like numbers, strings, enums, vectors, cframes, arrays, dictionaries...). `QuillComponents` are structured like the following:
 
 ```lua title="QuillComponent.luau"
--- // MODULES // --
 local QuillServiceTypes = require(PATH.TO.QuillServiceTypes)
-
--- // TYPES // --
 
 type Type = *Some Roblox type here*
 type Metadata = *Custom metadata here*
-
--- // MAIN // --
 
 local Module: QuillServiceTypes.QuillBase<Type, Metadata>
 
