@@ -1,7 +1,5 @@
 title = "Quill"
 
-classOrder = ["Quill"]
-
 [home]
 enabled = true
 
