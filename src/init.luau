@@ -14,7 +14,7 @@ type PlayersData<T> = QuillServiceTypes.PlayersData<T & {
     --[[
     Yields the current thread until the player's data is loaded
     ]]
-    Wait: ( self: QuillServiceTypes.PlayerData<T> ) -> QuillServiceTypes.PlayerData<T>
+    Wait: ( self: QuillServiceTypes.PlayerData<T> ) -> QuillServiceTypes.PlayerData<T>?
 }>
 
 -- // MAIN // --

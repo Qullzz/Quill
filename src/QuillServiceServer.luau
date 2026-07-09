@@ -45,21 +45,31 @@ function PlayerDataModule.Do(self: QuillServiceTypes.PlayerData, callback: ( Qui
     
     assert(
         typeof(player) == "Instance" and player:IsA("Player"),
-        `Attempted to call method on a non-registered PlayerData`
+        `Attempted to call :Do() on a non-registered PlayerData`
     )
     
     if table.find(Module.LoadedProfiles, player) then
         callback(Module.PlayersData[player])
     else
-        local connection
+        local profileAddedConnection
+        local profileRemovedConnection
         
-        connection = Module.ProfileAdded:Connect(function(thisPlayer: Player)
+        profileAddedConnection = Module.ProfileAdded:Connect(function(thisPlayer)
             
             if thisPlayer ~= player then return end
             
-            connection:Disconnect()
+            if profileAddedConnection then profileAddedConnection:Disconnect() end
+            if profileRemovedConnection then profileRemovedConnection:Disconnect() end
             
             callback(Module.PlayersData[player])
+        end)
+        
+        profileRemovedConnection = Module.ProfileRemoved:Connect(function(thisPlayer)
+            
+            if thisPlayer ~= player then return end
+            
+            if profileAddedConnection then profileAddedConnection:Disconnect() end
+            if profileRemovedConnection then profileRemovedConnection:Disconnect() end
         end)
     end
 end
@@ -76,27 +86,39 @@ function PlayerDataModule.Wait(self: QuillServiceTypes.PlayerData): QuillService
     
     assert(
         typeof(player) == "Instance" and player:IsA("Player"),
-        `Attempted to call method on a non-registered PlayerData`
+        `Attempted to call :Wait() on a non-registered PlayerData`
     )
     
-    local thread = coroutine.running()
-    
-    if not table.find(Module.LoadedProfiles, player) then
-        local connection
+    if table.find(Module.LoadedProfiles, player) then
+        return Module.PlayersData[player]
+    else
+        local thread = coroutine.running()
         
-        connection = Module.ProfileAdded:Connect(function(thisPlayer: Player)
+        local profileAddedConnection
+        local profileRemovedConnection
+        
+        profileAddedConnection = Module.ProfileAdded:Connect(function(thisPlayer)
             
             if thisPlayer ~= player then return end
             
-            connection:Disconnect()
+            if profileAddedConnection then profileAddedConnection:Disconnect() end
+            if profileRemovedConnection then profileRemovedConnection:Disconnect() end
             
             coroutine.resume(thread, Module.PlayersData[player])
         end)
         
+        profileRemovedConnection = Module.ProfileRemoved:Connect(function(thisPlayer)
+            
+            if thisPlayer ~= player then return end
+            
+            if profileAddedConnection then profileAddedConnection:Disconnect() end
+            if profileRemovedConnection then profileRemovedConnection:Disconnect() end
+            
+            coroutine.resume(thread, nil)
+        end)
+        
         return coroutine.yield(thread)
     end
-    
-    return Module.PlayersData[player]
 end
 
 function GetProfileKeyFromPlayer(player: Player)

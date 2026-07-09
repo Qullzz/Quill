@@ -1,1 +1,0 @@
- - Fix a bug where :Wait() and :Do() methods don't drop when the player leaves
