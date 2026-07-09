@@ -13,7 +13,7 @@ data.rank:Once(function(rank)
     warn("ADDED RANK:", rank)
 end)
 
-data:Wait()
+if not data:Wait() then return end
 
 print("Data loaded:", data)
 

@@ -11,7 +11,8 @@ local QuillSignal = require("./Dependencies/QuillSignal")
 
 -- // TYPES // --
 
-type Profile = QuillProfileStore.Profile<{ ID: number, Data: buffer }>
+type ProfileData = { ID: number, Data: buffer }
+type Profile = QuillProfileStore.Profile<ProfileData>
 
 -- // MAIN // --
 
@@ -20,7 +21,7 @@ local Module = {
     PlayersData = {} :: QuillServiceTypes.PlayersData,
     LoadedPlayers = {} :: { Player },
     LoadedProfiles = {} :: { Player },
-    Store = {} :: QuillProfileStore.ProfileStore<{ ID: number, Data: buffer }>,
+    Store = {} :: QuillProfileStore.ProfileStore<ProfileData>,
     Profiles = {} :: { [Player]: Profile },
     
     ProfileAdded = QuillSignal.new() :: QuillSignal.ScriptSignal<Player>,
@@ -44,21 +45,31 @@ function PlayerDataModule.Do(self: QuillServiceTypes.PlayerData, callback: ( Qui
     
     assert(
         typeof(player) == "Instance" and player:IsA("Player"),
-        `Attempted to call method on a non-registered PlayerData`
+        `Attempted to call :Do() on a non-registered PlayerData`
     )
     
     if table.find(Module.LoadedProfiles, player) then
         callback(Module.PlayersData[player])
     else
-        local connection
+        local profileAddedConnection
+        local profileRemovedConnection
         
-        connection = Module.ProfileAdded:Connect(function(thisPlayer: Player)
+        profileAddedConnection = Module.ProfileAdded:Connect(function(thisPlayer)
             
             if thisPlayer ~= player then return end
             
-            connection:Disconnect()
+            if profileAddedConnection then profileAddedConnection:Disconnect() end
+            if profileRemovedConnection then profileRemovedConnection:Disconnect() end
             
             callback(Module.PlayersData[player])
+        end)
+        
+        profileRemovedConnection = Module.ProfileRemoved:Connect(function(thisPlayer)
+            
+            if thisPlayer ~= player then return end
+            
+            if profileAddedConnection then profileAddedConnection:Disconnect() end
+            if profileRemovedConnection then profileRemovedConnection:Disconnect() end
         end)
     end
 end
@@ -75,27 +86,39 @@ function PlayerDataModule.Wait(self: QuillServiceTypes.PlayerData): QuillService
     
     assert(
         typeof(player) == "Instance" and player:IsA("Player"),
-        `Attempted to call method on a non-registered PlayerData`
+        `Attempted to call :Wait() on a non-registered PlayerData`
     )
     
-    local thread = coroutine.running()
-    
-    if not table.find(Module.LoadedProfiles, player) then
-        local connection
+    if table.find(Module.LoadedProfiles, player) then
+        return Module.PlayersData[player]
+    else
+        local thread = coroutine.running()
         
-        connection = Module.ProfileAdded:Connect(function(thisPlayer: Player)
+        local profileAddedConnection
+        local profileRemovedConnection
+        
+        profileAddedConnection = Module.ProfileAdded:Connect(function(thisPlayer)
             
             if thisPlayer ~= player then return end
             
-            connection:Disconnect()
+            if profileAddedConnection then profileAddedConnection:Disconnect() end
+            if profileRemovedConnection then profileRemovedConnection:Disconnect() end
             
             coroutine.resume(thread, Module.PlayersData[player])
         end)
         
+        profileRemovedConnection = Module.ProfileRemoved:Connect(function(thisPlayer)
+            
+            if thisPlayer ~= player then return end
+            
+            if profileAddedConnection then profileAddedConnection:Disconnect() end
+            if profileRemovedConnection then profileRemovedConnection:Disconnect() end
+            
+            coroutine.resume(thread, nil)
+        end)
+        
         return coroutine.yield(thread)
     end
-    
-    return Module.PlayersData[player]
 end
 
 function GetProfileKeyFromPlayer(player: Player)
@@ -175,7 +198,7 @@ function Module.PlayerAdded(self: Module, player: Player)
     end
     
     profile.OnSave:Connect(function()
-        profile.Data.ID = self.Properties.id
+        profile.Data.ID = self:GetTemplateID(self.Properties.templates.current_template)
         profile.Data.Data = QuillServiceUtility.SerializePlayerData(self.PlayersData[player])
     end)
     
@@ -269,17 +292,40 @@ function Module.SetPlayerData(self: Module, player: Player, data: QuillServiceTy
     end
 end
 
+function Module.GetTemplateID(self: Module, template: QuillServiceTypes.PlayerData): QuillServiceTypes.PlayerDataID
+    local result: number?
+    
+    if template == self.Properties.templates.current_template then
+        result = #self.Properties.templates.previous_templates
+    else
+        for index, thisTempalte in self.Properties.templates.previous_templates do
+            
+            if template ~= thisTempalte then continue end
+            
+            result = ( index - 1 )
+            
+            break
+        end
+    end
+    
+    assert(typeof(result) == "number", `No ID was found for a template. <template: {template}>`)
+    
+    result = math.clamp(-(2^53 - 1) + result, -(2^53 - 1), 2^53 - 1)
+    
+    return result
+end
+
 function Module.GetTemplateFromID(self: Module, id: QuillServiceTypes.PlayerDataID): QuillServiceTypes.PlayerData
     local result
     
-    if id == self.Properties.id then
+    if id == self:GetTemplateID(self.Properties.templates.current_template) then
         result = self.Properties.templates.current_template
     else
-        for _, template in ipairs(self.Properties.templates.old_templates) do
+        for _, template in ipairs(self.Properties.templates.previous_templates) do
             
-            if id ~= template.id then continue end
+            if id ~= self:GetTemplateID(template) then continue end
             
-            result = template.template
+            result = template
             
             break
         end
@@ -292,10 +338,11 @@ end
 
 function Module.Init(self: Module, properties: QuillServiceTypes.Properties): QuillServiceTypes.PlayersData
     self.Properties = properties
+    print(self:GetTemplateID(self.Properties.templates.current_template))
     self.Store = QuillProfileStore.New(
         (typeof(self.Properties.environment) == "string" and self.Properties.environment) or (RunService:IsStudio() and "Dev" or "Live"),
         {
-            ID = self.Properties.id,
+            ID = self:GetTemplateID(self.Properties.templates.current_template),
             Data = QuillServiceUtility.SerializePlayerData(self.Properties.templates.current_template)
         }
     )

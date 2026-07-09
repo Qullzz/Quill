@@ -64,26 +64,17 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Quill = require(ReplicatedStorage.Packages.Quill)
 
 return Quill.Init({
-    id = 2,
     mock = false,
     reset = false,
     
     templates = {
-        old_templates = {
+        previous_templates = {
             {
-                id = 0,
-                
-                template = {
-                    level = Quill.Number.New(false, "server", "u8", 0) -- VALUES MUST BE A QUILL!!
-                }
+                level = Quill.Number.New(false, "server", "u8", 0)
             },
             
             {
-                id = 1,
-                
-                template = {
-                    level = Quill.Number.New(false, "server", "u16", 0)
-                }
+                level = Quill.Number.New(false, "server", "u16", 0)
             }
         },
         
@@ -98,10 +89,6 @@ return Quill.Init({
 Templates must have `keys` that are strings and `values` that are Quills.
 
 they do NOT accept values that are NOT Quills.
-:::
-
-:::note
-It's suggested to have the `id`s as integers. They also should be incremented by 1's to avoid confusion
 :::
 
 ## Usage
@@ -147,7 +134,9 @@ Yields the current thread until the data is fully loaded!
 ```lua title=":Wait()"
 local Data = require(PATH.TO.DATA)
 
-local data = Data[player]:Wait() -- Yields/Waits until the player data is fully loaded!
+local data = Data[player]:Wait() -- Yields/Waits until the player data is fully loaded, returning it after
+
+if not data then return end
 
 local rank = data.rank()
 local new_rank = data.rank(rank + 1)
@@ -156,6 +145,10 @@ print(rank) -- Prints 2!
 print(new_rank) -- Prints 3!
 print(data.rank()) -- Prints 3!
 ```
+
+:::important
+If the player leaves before the data is loaded, :Wait() will return nil.
+:::
 
 ## Set value
 
@@ -248,8 +241,7 @@ Determines who has the authority over the Quill
 
 | Option | Description |
 | --- | --- |
-| `id` | A number that's a unique identifier to the current_template. |
 | `mock` | Whether to use mock storage, suggested for testing. |
 | `reset` | Whether to reset the player's data upon joining. |
 | `environment` | The name of the ProfileStore. Defaults to "Dev" or "Live" depending if the server is running in studio or not. |
-| `templates` | Holds the current_template and old_templates. |
+| `templates` | Holds the current_template and previous_templates. |
