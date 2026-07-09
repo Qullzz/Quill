@@ -90,17 +90,17 @@ Module = {
     
     __call = function(self, value, replicate)
         if typeof(value) == typeof(self.value) and value ~= self.value then
-            local old_value = self.value
+            local previous_value = self.value
             
             self.value = value
             
             for _, callback in ipairs(self._callbacks) do
                 if callback.once then
-                    callback.callback(value, old_value, replicate)
+                    callback.callback(value, previous_value, replicate)
                     
                     callback.disconnect()
                 else
-                    callback.callback(value, old_value, callback.disconnect, replicate)
+                    callback.callback(value, previous_value, callback.disconnect, replicate)
                 end
             end
         end

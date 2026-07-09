@@ -64,26 +64,17 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Quill = require(ReplicatedStorage.Packages.Quill)
 
 return Quill.Init({
-    id = 2,
     mock = false,
     reset = false,
     
     templates = {
-        old_templates = {
+        previous_templates = {
             {
-                id = 0,
-                
-                template = {
-                    level = Quill.Number.New(false, "server", "u8", 0) -- VALUES MUST BE A QUILL!!
-                }
+                level = Quill.Number.New(false, "server", "u8", 0)
             },
             
             {
-                id = 1,
-                
-                template = {
-                    level = Quill.Number.New(false, "server", "u16", 0)
-                }
+                level = Quill.Number.New(false, "server", "u16", 0)
             }
         },
         
@@ -252,4 +243,4 @@ Determines who has the authority over the Quill
 | `mock` | Whether to use mock storage, suggested for testing. |
 | `reset` | Whether to reset the player's data upon joining. |
 | `environment` | The name of the ProfileStore. Defaults to "Dev" or "Live" depending if the server is running in studio or not. |
-| `templates` | Holds the current_template and old_templates. |
+| `templates` | Holds the current_template and previous_templates. |

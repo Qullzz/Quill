@@ -43,19 +43,12 @@ export type Quill<T = any, M = any> = typeof(setmetatable({} :: {
 -- ## PROPERTIES ## --
 
 export type Properties<T = {}> = {
-    id: PlayerDataID,
     mock: boolean,
     reset: boolean,
     environment: string?,
     
     templates: {
-        old_templates: {
-            {
-                id: PlayerDataID,
-                
-                template: PlayerData<{}>
-            }
-        },
+        previous_templates: { PlayerData },
         
         current_template: T
     }
