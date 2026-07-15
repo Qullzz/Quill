@@ -3,7 +3,7 @@ name = "qullzz/quill"
 authors = ["Qullzz"]
 license = "MIT"
 description = "Handle data in a charm-like way, includes data compression, built-in replication and more!"
-version = "0.0.1"
+version = "0.0.2"
 registry = "https://github.com/UpliftGames/wally-index"
 realm = "shared"
 

@@ -1,6 +1,6 @@
 # Quill
 
-Quill is a schema-based player data system that wraps ProfileStore. It includes serializing, deserializing, built-in data replication and more. It shines when dealing with a large data.
+Quill is a schema-based player data system that wraps ProfileStore. It includes serializing, deserializing, built-in data replication and more. It shines when dealing with large data.
 
 #### Quill relies on `Quills` that are made by `QuillComponents`, which are custom types to Quill.
 #### It's encouraged to make your own `QuillComponent` for complex data types.
@@ -74,7 +74,9 @@ return Quill.Init({
             },
             
             {
-                level = Quill.Number.New(false, "server", "u16", 0)
+                level = Quill.Number.New(false, "server", "u16", 0, function(value)
+                    return value
+                end)
             }
         },
         
@@ -117,7 +119,7 @@ Receives a callback and calls it once the player data is fully loaded!
 ```lua title=":Do()"
 local Data = require(PATH.TO.DATA)
 
-local data = Data[player]:Do(function() -- Calls the callback once the player data is fully loaded
+Data[player]:Do(function(data) -- Calls the callback once the player data is fully loaded
     local rank = data.rank()
     local new_rank = data.rank(rank + 1)
     
@@ -173,7 +175,7 @@ local rank = Data[player].rank()
 
 Quills expose methods to listen for changes that occur to them:
 
-`:Connect(value, previous_value, disconnect)` listens for changes untill disconnected manually.
+`:Connect(value, previous_value, disconnect)` listens for changes until disconnected manually.
 
 `:Once(value, previous_value)` listens for changes one time, disconnecting immediately after.
 
@@ -228,10 +230,17 @@ Determines whether changes should be automatically replicated if they weren't ex
 
 ### authority: `string`
 
-Determines who has the authority over the Quill
+Determines who has the authority over the Quill.
 
  - `Server`: Only modifications from it will be saved and replicated.
  - `Client`: The client will be able to modify the Quill locally and replicate changes to the server, replicating to other clients afterwards.
+
+### convert: `(any) -> T?`
+
+Used to convert an already existing value of a Quill to fit the current Quill.
+
+ - `Returned type T`: If a value was returned, that values will be used.
+ - `Returned type nil`: If nothing was returned, it'll default to the value set by the template's Quill.
 
 ## Templates
 

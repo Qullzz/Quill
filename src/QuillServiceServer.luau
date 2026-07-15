@@ -280,9 +280,13 @@ function Module.SetPlayerData(self: Module, player: Player, data: QuillServiceTy
             for key, current_quill in pairs(current_data) do
                 local quill = data[key]
                 
-                if not quill or not current_quill:TypeEqual(quill) or current_quill == quill then continue end
+                if not quill then continue end
                 
-                current_quill(quill())
+                if typeof(current_quill.convert) == "function" then
+                    current_quill(current_quill.convert(quill()) or current_quill())
+                elseif current_quill:TypeEqual(quill) then
+                    current_quill(quill())
+                end
             end
         else
             self.PlayersData[player] = setmetatable(data, PlayerDataModule) :: any
@@ -338,7 +342,7 @@ end
 
 function Module.Init(self: Module, properties: QuillServiceTypes.Properties): QuillServiceTypes.PlayersData
     self.Properties = properties
-    print(self:GetTemplateID(self.Properties.templates.current_template))
+    
     self.Store = QuillProfileStore.New(
         (typeof(self.Properties.environment) == "string" and self.Properties.environment) or (RunService:IsStudio() and "Dev" or "Live"),
         {
