@@ -10,7 +10,7 @@ local Data = require(ReplicatedStorage.Data)
 local data = Data[Players.PlayerAdded:Wait()]
 
 data.rank:Once(function(rank)
-    warn("ADDED RANK:", rank)
+    warn("SET RANK:", rank)
 end)
 
 if not data:Wait() then return end
@@ -18,7 +18,7 @@ if not data:Wait() then return end
 print("Data loaded:", data)
 
 data:Do(function(data)
-    data:Wait()
+    data:Wait() -- This won't yield since it's already loaded
     warn("Data loaded", data)
     
     while task.wait(math.random(2, 3)) do

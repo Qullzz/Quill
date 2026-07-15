@@ -11,19 +11,21 @@ type Metadata = "u8" | "u16" | "u32" | "i8" | "i16" | "i32" | "f32" | "f64"
 local Module: QuillServiceTypes.QuillBase<Type, Metadata>
 
 Module = {
-    New = function(auto_replicate, authority, meta_data, value)
+    New = function(auto_replicate, authority, meta_data, value, convert)
         return setmetatable({
             auto_replicate = auto_replicate,
             authority = authority,
             meta_data = meta_data,
             value = value,
             
+            convert = convert,
+            
             _callbacks = {}
         }, Module)
     end,
     
     Clone = function(self)
-        return Module.New(self.auto_replicate, self.authority, self.meta_data, self.value)
+        return Module.New(self.auto_replicate, self.authority, self.meta_data, self.value, self.convert)
     end,
     
     Once = function(self, callback)

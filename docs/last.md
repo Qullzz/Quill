@@ -11,19 +11,21 @@ type Metadata = *Custom metadata here*
 local Module: QuillServiceTypes.QuillBase<Type, Metadata>
 
 Module = {
-    New = function(auto_replicate, authority, meta_data, value)
+    New = function(auto_replicate, authority, meta_data, value, convert)
         return setmetatable({
             auto_replicate = auto_replicate,
             authority = authority,
             meta_data = meta_data,
             value = value,
             
+            convert = convert,
+            
             _callbacks = {}
         }, Module)
     end,
     
     Clone = function(self)
-        return Module.New(self.auto_replicate, self.authority, self.meta_data, self.value)
+        return Module.New(self.auto_replicate, self.authority, self.meta_data, self.value, self.convert)
     end,
     
     Once = function(self, callback)
@@ -112,7 +114,7 @@ Module = {
 Module.__index = Module
 ```
 
-### `.New(auto_replicate, authority, meta_data, value) -> Quill`
+### `.New(auto_replicate, authority, meta_data, value, convert) -> Quill`
 
 Creates and returns a new Quill.
 

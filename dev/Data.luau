@@ -4,7 +4,7 @@ local Quill = require("./Quill")
 -- // MAIN // --
 
 return Quill.Init({
-    mock = true,
+    mock = false,
     reset = true,
     
     templates = {

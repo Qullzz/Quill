@@ -7,7 +7,7 @@ export type QuillBaseOnceCallback<T = any> = ( value: T, prev_value: T, replicat
 export type QuillBaseConnectCallback<T = any> = ( value: T, prev_value: T, disconnect: QuillBaseDisconnect, replicate: boolean? ) -> ()
 
 export type QuillBase<T = any, M = any> = {
-    New: ( auto_replicate: QuillAutoReplicate, authority: QuillAuthority, meta_data: M, value: T ) -> Quill<T, M>,
+    New: ( auto_replicate: QuillAutoReplicate, authority: QuillAuthority, meta_data: M, value: T, convert: QuillConvert<T>? ) -> Quill<T, M>,
     Clone: ( self: Quill<T, M> ) -> Quill<T, M>,
     Once: ( self: Quill<T, M>, callback: QuillBaseOnceCallback<T> ) -> QuillBaseDisconnect,
     Connect: ( self: Quill<T, M>, callback: QuillBaseConnectCallback<T> ) -> QuillBaseDisconnect,
@@ -24,12 +24,15 @@ export type QuillBase<T = any, M = any> = {
 
 export type QuillAutoReplicate = boolean
 export type QuillAuthority = "server" | "client"
+export type QuillConvert<T = any> = ( value: any ) -> T?
 
 export type Quill<T = any, M = any> = typeof(setmetatable({} :: {
     auto_replicate: QuillAutoReplicate,
     authority: QuillAuthority,
     meta_data: M,
     value: T,
+    
+    convert: QuillConvert<T>?,
     
     _callbacks: {
         {
@@ -50,7 +53,7 @@ export type Properties<T = {}> = {
     templates: {
         previous_templates: { PlayerData },
         
-        current_template: T
+        current_template: PlayerData<T>
     }
 }
 
