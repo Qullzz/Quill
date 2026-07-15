@@ -1,6 +1,6 @@
 # Quill
 
-Quill is a schema-based player data system that wraps ProfileStore. It includes serializing, deserializing, built-in data replication and more. It shines when dealing with a large data.
+Quill is a schema-based player data system that wraps ProfileStore. It includes serializing, deserializing, built-in data replication and more. It shines when dealing with large data.
 
 #### Quill relies on `Quills` that are made by `QuillComponents`, which are custom types to Quill.
 #### It's encouraged to make your own `QuillComponent` for complex data types.
@@ -175,7 +175,7 @@ local rank = Data[player].rank()
 
 Quills expose methods to listen for changes that occur to them:
 
-`:Connect(value, previous_value, disconnect)` listens for changes untill disconnected manually.
+`:Connect(value, previous_value, disconnect)` listens for changes until disconnected manually.
 
 `:Once(value, previous_value)` listens for changes one time, disconnecting immediately after.
 
