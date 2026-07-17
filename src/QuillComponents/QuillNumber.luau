@@ -129,7 +129,7 @@ Module = {
     end,
     
     __call = function(self, value, replicate)
-        if typeof(value) == typeof(self.value) and value ~= self.value then
+        if value and typeof(value) == typeof(self.value) and value ~= self.value then
             local previous_value = self.value
             
             self.value = value
