@@ -1,5 +1,5 @@
 -- // MODULES // --
-local Callnet = require("./Dependencies/QuillCallnet")
+local Callnet = require("./QuillDependencies/QuillCallnet")
 
 -- // MAIN // --
 
@@ -21,7 +21,7 @@ return Callnet.defineNamespace("__QuillService", function()
             value = userID
         }),
         
-        QuillChangedServer = Callnet.definePacket({
+        ComponentChangedServer = Callnet.definePacket({
             reliabilityType = "reliable",
             value = Callnet.struct({
                 userID = userID,
@@ -30,7 +30,7 @@ return Callnet.defineNamespace("__QuillService", function()
             })
         }),
         
-        QuillChangedClient = Callnet.definePacket({
+        ComponentChangedClient = Callnet.definePacket({
             reliabilityType = "reliable",
             value = Callnet.struct({
                 index = Callnet.uint16,

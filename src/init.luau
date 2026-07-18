@@ -20,8 +20,8 @@ type PlayersData<T> = QuillServiceTypes.PlayersData<T & {
 -- // MAIN // --
 
 return {
-    Number = require("@self/QuillComponents/QuillNumber"),
-    Array = require("@self/QuillComponents/QuillArray"),
+    Number = require("@self/QuillComponents/QuillNumberComponent"),
+    Array = require("@self/QuillComponents/QuillArrayComponent"),
     
     Init = function<T>(properties: QuillServiceTypes.Properties<T>): PlayersData<T>
         return (RunService:IsServer() and require("@self/QuillServiceServer"):Init(properties) or require("@self/QuillServiceClient"):Init(properties)) :: any

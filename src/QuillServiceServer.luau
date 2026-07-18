@@ -3,11 +3,11 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
 -- // MODULES // --
-local QuillProfileStore = require("./Dependencies/QuillProfileStore")
+local QuillProfileStore = require("./QuillDependencies/QuillProfileStore")
 local QuillServiceTypes = require("./QuillServiceTypes")
 local QuillServiceUtility = require("./QuillServiceUtility")
 local QuillServiceNetwork = require("./QuillServiceNetwork")
-local QuillSignal = require("./Dependencies/QuillSignal")
+local QuillSignal = require("./QuillDependencies/QuillSignal")
 
 -- // TYPES // --
 
@@ -128,14 +128,14 @@ end
 function GetPlayerDataTemplateDeltas(template: QuillServiceTypes.PlayerData, data: QuillServiceTypes.PlayerData)
     local result = {}
     
-    for key, quill in pairs(data) do
-        local template_quill = template[key]
+    for key, component in pairs(data) do
+        local templateComponent = template[key]
         
-        if not template_quill then continue end
+        if not templateComponent then continue end
         
-        if quill == template_quill then continue end
+        if component == templateComponent then continue end
         
-        result[key] = quill()
+        result[key] = component:SafeGet()
     end
     
     return result
@@ -154,11 +154,11 @@ function Module.RegisterPlayer(self: Module, player: Player, profile: Profile)
     local deltas = GetPlayerDataTemplateDeltas(template, self.PlayersData[player])
     
     for key, value in pairs(deltas) do
-        local quill = data[key]
+        local component = data[key]
         
-        if not quill then continue end
+        if not component then continue end
         
-        quill(value)
+        component(value)
     end
     
     self:SetPlayerData(player, data)
@@ -198,7 +198,7 @@ function Module.PlayerAdded(self: Module, player: Player)
     end
     
     profile.OnSave:Connect(function()
-        profile.Data.ID = self:GetTemplateID(self.Properties.templates.current_template)
+        profile.Data.ID = self:GetTemplateID(self.Properties.templates.currentTemplate)
         profile.Data.Data = QuillServiceUtility.SerializePlayerData(self.PlayersData[player])
     end)
     
@@ -244,26 +244,26 @@ function Module.BindPlayerDataReplication(self: Module, player: Player)
     local schema = QuillServiceUtility.GetTemplateSchema(data)
     
     for index, value in ipairs(schema) do
-        local quill = value.quill
+        local component = value.component
         
-        quill:Connect(function(_, _, value, replicate)
+        component:Connect(function(_, _, value, replicate)
             
             if not (
                 if typeof(replicate) == "boolean" then replicate
-                else quill.auto_replicate
+                else component.autoReplicate
             ) then return end
             
-            if quill.authority == "server" then
-                QuillServiceNetwork.QuillChangedServer.sendToList({
+            if component.authority == "server" then
+                QuillServiceNetwork.ComponentChangedServer.sendToList({
                     userID = player.UserId,
                     index = index,
-                    data = quill:Serialize()
+                    data = component:Serialize(true)
                 }, self.LoadedPlayers)
             else
-                QuillServiceNetwork.QuillChangedServer.sendFiltered({
+                QuillServiceNetwork.ComponentChangedServer.sendFiltered({
                     userID = player.UserId,
                     index = index,
-                    data = quill:Serialize()
+                    data = component:Serialize(true)
                 }, function(thisPlayer)
                     return thisPlayer ~= player and table.find(self.LoadedPlayers, thisPlayer)
                 end)
@@ -274,18 +274,18 @@ end
 
 function Module.SetPlayerData(self: Module, player: Player, data: QuillServiceTypes.PlayerData?)
     if typeof(data) == "table" then
-        local current_data = rawget(self.PlayersData, player)
+        local currentData = rawget(self.PlayersData, player)
         
-        if current_data then
-            for key, current_quill in pairs(current_data) do
-                local quill = data[key]
+        if currentData then
+            for key, thisComponent in pairs(currentData) do
+                local component = data[key]
                 
-                if not quill then continue end
+                if not component then continue end
                 
-                if typeof(current_quill.convert) == "function" then
-                    current_quill(current_quill.convert(quill()) or current_quill())
-                elseif current_quill:TypeEqual(quill) then
-                    current_quill(quill())
+                if typeof(thisComponent.convert) == "function" then
+                    thisComponent(thisComponent.convert(component:SafeGet()) or thisComponent:SafeGet())
+                elseif thisComponent:TypeEqual(component) then
+                    thisComponent(component:SafeGet())
                 end
             end
         else
@@ -299,10 +299,10 @@ end
 function Module.GetTemplateID(self: Module, template: QuillServiceTypes.PlayerData): QuillServiceTypes.PlayerDataID
     local result: number?
     
-    if template == self.Properties.templates.current_template then
-        result = #self.Properties.templates.previous_templates
+    if template == self.Properties.templates.currentTemplate then
+        result = #self.Properties.templates.previousTemplates
     else
-        for index, thisTempalte in self.Properties.templates.previous_templates do
+        for index, thisTempalte in self.Properties.templates.previousTemplates do
             
             if template ~= thisTempalte then continue end
             
@@ -322,10 +322,10 @@ end
 function Module.GetTemplateFromID(self: Module, id: QuillServiceTypes.PlayerDataID): QuillServiceTypes.PlayerData
     local result
     
-    if id == self:GetTemplateID(self.Properties.templates.current_template) then
-        result = self.Properties.templates.current_template
+    if id == self:GetTemplateID(self.Properties.templates.currentTemplate) then
+        result = self.Properties.templates.currentTemplate
     else
-        for _, template in ipairs(self.Properties.templates.previous_templates) do
+        for _, template in ipairs(self.Properties.templates.previousTemplates) do
             
             if id ~= self:GetTemplateID(template) then continue end
             
@@ -346,8 +346,8 @@ function Module.Init(self: Module, properties: QuillServiceTypes.Properties): Qu
     self.Store = QuillProfileStore.New(
         (typeof(self.Properties.environment) == "string" and self.Properties.environment) or (RunService:IsStudio() and "Dev" or "Live"),
         {
-            ID = self:GetTemplateID(self.Properties.templates.current_template),
-            Data = QuillServiceUtility.SerializePlayerData(self.Properties.templates.current_template)
+            ID = self:GetTemplateID(self.Properties.templates.currentTemplate),
+            Data = QuillServiceUtility.SerializePlayerData(self.Properties.templates.currentTemplate)
         }
     )
     
@@ -358,7 +358,7 @@ function Module.Init(self: Module, properties: QuillServiceTypes.Properties): Qu
                 `[{script.Name}]: Attempted to index PlayersData with a non-player key. <key: {typeof(player)}, trace: {debug.traceback()}>`
             )
             
-            local data = QuillServiceUtility.CopyTemplate(self.Properties.templates.current_template)
+            local data = QuillServiceUtility.CopyTemplate(self.Properties.templates.currentTemplate)
             
             self:SetPlayerData(player, data)
             
@@ -379,7 +379,7 @@ function Module.Init(self: Module, properties: QuillServiceTypes.Properties): Qu
         self:PlayerAdded(player)
     end)
     
-    QuillServiceNetwork.QuillChangedClient.listen(function(_data, player)
+    QuillServiceNetwork.ComponentChangedClient.listen(function(_data, player)
         
         if not player then return end
         
@@ -389,9 +389,9 @@ function Module.Init(self: Module, properties: QuillServiceTypes.Properties): Qu
         
         local value = schema[_data.index]
         
-        if not value or value.quill.authority ~= "client" then return end
+        if not value or value.component.authority ~= "client" then return end
         
-        value.quill(value.quill:Deserialize(_data.data), _data.replicate)
+        value.component(value.component:Deserialize(_data.data, true), _data.replicate)
     end)
     
     return self.PlayersData

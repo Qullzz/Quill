@@ -5,19 +5,16 @@ local Quill = require("./Quill")
 
 return Quill.Init({
     mock = false,
-    reset = false,
+    reset = true,
     
     templates = {
-        previous_templates = {
+        previousTemplates = {
             
         },
         
-        current_template = {
-            -- rank = Quill.Number.New(true, "server", "u8", 100),
-            inventory = Quill.Array.New(false, "server", {
-                clone = {},
-                quill = Quill.Number.New(false, "server", "u8", 0)
-            }, {})
+        currentTemplate = {
+            -- rank = Quill.Number(true, "server", "u16", 1),
+            inventory = Quill.Array(true, "server", Quill.Number(true, "server", "u8", 0))
         }
     }
 })

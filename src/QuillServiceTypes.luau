@@ -2,46 +2,46 @@
 
 -- ## BASE ## --
 
-export type QuillBaseDisconnect = () -> ()
-export type QuillBaseOnceCallback<T = any> = ( value: T, prev_value: T, replicate: boolean? ) -> ()
-export type QuillBaseConnectCallback<T = any> = ( value: T, prev_value: T, disconnect: QuillBaseDisconnect, replicate: boolean? ) -> ()
+export type BaseDisconnect = () -> ()
+export type BaseOnceCallback<T = any> = ( value: T, prevValue: T, replicate: BaseReplicate? ) -> ()
+export type BaseConnectCallback<T = any> = ( value: T, prevValue: T, disconnect: BaseDisconnect, replicate: BaseReplicate? ) -> ()
+export type BaseReplicate = boolean
 
-export type QuillBase<T = any, M = any> = {
-    New: ( auto_replicate: QuillAutoReplicate, authority: QuillAuthority, meta_data: M, value: T, convert: QuillConvert<T>? ) -> Quill<T, M>,
-    Clone: ( self: Quill<T, M> ) -> Quill<T, M>,
-    Once: ( self: Quill<T, M>, callback: QuillBaseOnceCallback<T> ) -> QuillBaseDisconnect,
-    Connect: ( self: Quill<T, M>, callback: QuillBaseConnectCallback<T> ) -> QuillBaseDisconnect,
-    TypeEqual: ( quill1: Quill<T, M>, quill2: Quill<T, M> ) -> boolean,
-    Serialize: ( self: Quill<T, M> ) -> buffer,
-    Deserialize: ( self: Quill<T, M>, buff: buffer ) -> Quill<T, M>,
+export type Base<T = any, V = any> = {
+    Clone: ( self: T, value: V? ) -> T,
+    Once: ( self: T, callback: BaseOnceCallback<V> ) -> BaseDisconnect,
+    Connect: ( self: T, callback: BaseConnectCallback<V> ) -> BaseDisconnect,
+    TypeEqual: ( self: T, component: T ) -> boolean,
+    Serialize: ( self: T, replication: BaseReplicate? ) -> buffer,
+    Deserialize: ( self: T, buff: buffer, replication: BaseReplicate? ) -> V,
+    SafeWrite: ( self: T, value: V ) -> (),
+    SafeGet: ( self: T ) -> V,
     
-    __eq: ( quill1: Quill<T, M>, quill2: Quill<T, M> ) -> boolean,
-    __call: ( self: Quill<T, M>, value: T?, replicate: boolean? ) -> T,
-    __index: QuillBase<T, M>?
+    __eq: ( self: T, component: T ) -> boolean,
+    __index: Base<T, V>?
 }
 
--- ## QUILL ## --
+-- ## COMPONENT ## --
 
-export type QuillAutoReplicate = boolean
-export type QuillAuthority = "server" | "client"
-export type QuillConvert<T = any> = ( value: any ) -> T?
+export type ComponentAutoReplicate = BaseReplicate
+export type ComponentAuthority = "server" | "client"
+export type ComponentConvert<T = any> = ( value: any ) -> T?
 
-export type Quill<T = any, M = any> = typeof(setmetatable({} :: {
-    auto_replicate: QuillAutoReplicate,
-    authority: QuillAuthority,
-    meta_data: M,
+export type Component<T = any, B = any> = typeof(setmetatable({} :: {
+    autoReplicate: ComponentAutoReplicate,
+    authority: ComponentAuthority,
     value: T,
     
-    convert: QuillConvert<T>?,
+    convert: ComponentConvert<T>?,
     
     _callbacks: {
         {
-            callback: QuillBaseOnceCallback<T> | QuillBaseConnectCallback<T>,
-            disconnect: QuillBaseDisconnect,
+            callback: BaseOnceCallback<T> | BaseConnectCallback<T>,
+            disconnect: BaseDisconnect,
             once: boolean
         }
     }
-}, {} :: QuillBase<T, M>)) & QuillBase<T, M> & (( value: T?, replicate: boolean? ) -> T)
+}, {} :: Base<Component<T, B>, T>)) & B
 
 -- ## PROPERTIES ## --
 
@@ -51,9 +51,9 @@ export type Properties<T = {}> = {
     environment: string?,
     
     templates: {
-        previous_templates: { PlayerData },
+        previousTemplates: { PlayerData },
         
-        current_template: PlayerData<T>
+        currentTemplate: PlayerData<T>
     }
 }
 
@@ -61,7 +61,7 @@ export type Properties<T = {}> = {
 
 export type PlayerDataID = number
 export type PlayerDataKey = string
-export type PlayerDataValue = Quill
+export type PlayerDataValue = Component
 
 export type PlayerData<T = { [PlayerDataKey]: PlayerDataValue }> = T
 export type PlayersData<T = { [PlayerDataKey]: PlayerDataValue }> = { [Player]: PlayerData<T> }

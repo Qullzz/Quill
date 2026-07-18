@@ -5,23 +5,30 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 -- // MODULES // --
 local Data = require(ReplicatedStorage.Data)
 local Quill = require(ReplicatedStorage.Quill)
-local server = require(ReplicatedStorage.Quill.Dependencies.QuillCallnet.process.server)
 
 -- // MAIN // --
 
-local data = Data[Players.PlayerAdded:Wait()]
-
-data.inventory:Connect(function(value, prev_value)
-    print(`Changed inventory`, prev_value, value)
-end)
-
-data:Do(function(data)
+Data[Players.PlayerAdded:Wait()]:Do(function(data)
+    data.inventory:Connect(function(value, prevValue)
+        warn(value, prevValue)
+    end)
+    
     while task.wait(2) do
-        table.insert(data.inventory(), Quill.Number.New(true, "server", "u8", 0))
-        
-        data.inventory(data.inventory())
+        data.inventory:Append(data.inventory.component:Clone())
     end
 end)
+
+-- data.inventory:Connect(function(value, prev_value)
+--     print(`Changed inventory`, prev_value, value)
+-- end)
+
+-- data:Do(function(data)
+--     while task.wait(2) do
+--         table.insert(data.inventory(), Quill.Number.New(true, "server", "u8", 0))
+        
+--         data.inventory(data.inventory())
+--     end
+-- end)
 
 -- data.rank:Once(function(rank)
 --     warn("SET RANK:", rank)

@@ -5,7 +5,7 @@ local Players = game:GetService("Players")
 local QuillServiceTypes = require("./QuillServiceTypes")
 local QuillServiceUtility = require("./QuillServiceUtility")
 local QuillServiceNetwork = require("./QuillServiceNetwork")
-local QuillSignal = require("./Dependencies/QuillSignal")
+local QuillSignal = require("./QuillDependencies/QuillSignal")
 
 -- // MAIN // --
 
@@ -97,16 +97,16 @@ function Module.BindPlayerDataReplication(self: Module, player: Player)
     local schema = QuillServiceUtility.GetTemplateSchema(data)
     
     for index, value in ipairs(schema) do
-        local quill = value.quill
+        local component = value.component
         
-        quill:Connect(function(_, _, value, replicate)
+        component:Connect(function(_, _, value, replicate)
             
-            if quill.authority ~= "client" then return end
+            if component.authority ~= "client" then return end
             
-            QuillServiceNetwork.QuillChangedClient.send({
+            QuillServiceNetwork.ComponentChangedClient.send({
                 index = index,
                 replicate = replicate,
-                data = quill:Serialize()
+                data = component:Serialize(true)
             })
         end)
     end
@@ -114,15 +114,15 @@ end
 
 function Module.SetPlayerData(self: Module, player: Player, data: QuillServiceTypes.PlayerData?)
     if typeof(data) == "table" then
-        local current_data = rawget(self.PlayersData, player)
+        local currentData = rawget(self.PlayersData, player)
         
-        if current_data then
-            for key, current_quill in pairs(current_data) do
-                local quill = data[key]
+        if currentData then
+            for key, thisComponent in pairs(currentData) do
+                local component = data[key]
                 
-                if not quill or not current_quill:TypeEqual(quill) or current_quill == quill then continue end
+                if not component or not thisComponent:TypeEqual(component) or thisComponent == component then continue end
                 
-                current_quill(quill())
+                thisComponent:SafeWrite(component:SafeGet())
             end
         else
             self.PlayersData[player] = setmetatable(data, PlayerDataModule) :: any
@@ -142,7 +142,7 @@ function Module.Init(self: Module, properties: QuillServiceTypes.Properties): Qu
                 `[{script.Name}]: Attempted to index PlayersData with a non-player key. <key: {typeof(player)}, trace: {debug.traceback()}>`
             )
             
-            local data = QuillServiceUtility.CopyTemplate(self.Properties.templates.current_template)
+            local data = QuillServiceUtility.CopyTemplate(self.Properties.templates.currentTemplate)
             
             self:SetPlayerData(player, data)
             
@@ -155,7 +155,7 @@ function Module.Init(self: Module, properties: QuillServiceTypes.Properties): Qu
         
         if not player then return end
         
-        local data = QuillServiceUtility.DeserializePlayerData(self.Properties.templates.current_template, _data.data)
+        local data = QuillServiceUtility.DeserializePlayerData(self.Properties.templates.currentTemplate, _data.data)
         
         self:SetPlayerData(player, data)
         
@@ -178,7 +178,7 @@ function Module.Init(self: Module, properties: QuillServiceTypes.Properties): Qu
         self.ProfileRemoved:Fire(player)
     end)
     
-    QuillServiceNetwork.QuillChangedServer.listen(function(_data)
+    QuillServiceNetwork.ComponentChangedServer.listen(function(_data)
         local player = Players:GetPlayerByUserId(_data.userID)
         
         if not player then return end
@@ -191,7 +191,7 @@ function Module.Init(self: Module, properties: QuillServiceTypes.Properties): Qu
         
         if not value then return end
         
-        value.quill(value.quill:Deserialize(_data.data))
+        value.component(value.component:Deserialize(_data.data, true))
     end)
     
     QuillServiceNetwork.PlayerLoaded.send()
