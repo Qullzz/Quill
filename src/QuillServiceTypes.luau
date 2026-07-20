@@ -12,6 +12,7 @@ export type Base<T = any, V = any> = {
     Once: ( self: T, callback: BaseOnceCallback<V> ) -> BaseDisconnect,
     Connect: ( self: T, callback: BaseConnectCallback<V> ) -> BaseDisconnect,
     TypeEqual: ( self: T, component: T ) -> boolean,
+    Size: ( self: T, buff: buffer? ) -> ComponentSize,
     Serialize: ( self: T, replication: BaseReplicate? ) -> buffer,
     Deserialize: ( self: T, buff: buffer, replication: BaseReplicate? ) -> V,
     SafeWrite: ( self: T, value: V ) -> (),
@@ -26,6 +27,7 @@ export type Base<T = any, V = any> = {
 export type ComponentAutoReplicate = BaseReplicate
 export type ComponentAuthority = "server" | "client"
 export type ComponentConvert<T = any> = ( value: any ) -> T?
+export type ComponentSize = number
 
 export type Component<T = any, B = any> = typeof(setmetatable({} :: {
     autoReplicate: ComponentAutoReplicate,
@@ -61,7 +63,7 @@ export type Properties<T = {}> = {
 
 export type PlayerDataID = number
 export type PlayerDataKey = string
-export type PlayerDataValue = Component
+export type PlayerDataValue = Component<any, Base<Component<any, any>, any>>
 
 export type PlayerData<T = { [PlayerDataKey]: PlayerDataValue }> = T
 export type PlayersData<T = { [PlayerDataKey]: PlayerDataValue }> = { [Player]: PlayerData<T> }

@@ -4,17 +4,28 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 -- // MODULES // --
 local Data = require(ReplicatedStorage.Data)
-local Quill = require(ReplicatedStorage.Quill)
 
 -- // MAIN // --
 
-Data[Players.PlayerAdded:Wait()]:Do(function(data)
-    data.inventory:Connect(function(value, prevValue)
-        warn(value, prevValue)
-    end)
+local data = Data[Players.PlayerAdded:Wait()]
+
+data.inventory:Connect(function(value, prevValue)
+    print(`Changed inventory:`, prevValue, "->", value)
+end)
+
+data:Do(function(data)
+    -- print(data.inventory())
+    
+    -- data.inventory:Map(function(component)
+    --     component(math.random(1, 2))
+        
+    --     return component
+    -- end)
+    
+    -- warn(data.inventory())
     
     while task.wait(2) do
-        data.inventory:Append(data.inventory.component:Clone())
+        data.inventory:Append(math.random(0, 255))
     end
 end)
 

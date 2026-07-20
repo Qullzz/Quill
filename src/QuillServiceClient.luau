@@ -99,7 +99,7 @@ function Module.BindPlayerDataReplication(self: Module, player: Player)
     for index, value in ipairs(schema) do
         local component = value.component
         
-        component:Connect(function(_, _, value, replicate)
+        component:Connect(function(_, _, _, replicate)
             
             if component.authority ~= "client" then return end
             
@@ -120,9 +120,13 @@ function Module.SetPlayerData(self: Module, player: Player, data: QuillServiceTy
             for key, thisComponent in pairs(currentData) do
                 local component = data[key]
                 
-                if not component or not thisComponent:TypeEqual(component) or thisComponent == component then continue end
+                if not component then continue end
                 
-                thisComponent:SafeWrite(component:SafeGet())
+                if typeof(thisComponent.convert) == "function" then
+                    thisComponent:SafeWrite(thisComponent.convert(component:SafeGet()) or component:SafeGet())
+                elseif thisComponent:TypeEqual(component) then
+                    thisComponent:SafeWrite(component:SafeGet())
+                end
             end
         else
             self.PlayersData[player] = setmetatable(data, PlayerDataModule) :: any
@@ -191,7 +195,7 @@ function Module.Init(self: Module, properties: QuillServiceTypes.Properties): Qu
         
         if not value then return end
         
-        value.component(value.component:Deserialize(_data.data, true))
+        value.component:SafeWrite(value.component:Deserialize(_data.data, true))
     end)
     
     QuillServiceNetwork.PlayerLoaded.send()

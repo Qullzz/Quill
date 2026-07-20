@@ -158,7 +158,7 @@ function Module.RegisterPlayer(self: Module, player: Player, profile: Profile)
         
         if not component then continue end
         
-        component(value)
+        component:SafeWrite(value)
     end
     
     self:SetPlayerData(player, data)
@@ -246,12 +246,9 @@ function Module.BindPlayerDataReplication(self: Module, player: Player)
     for index, value in ipairs(schema) do
         local component = value.component
         
-        component:Connect(function(_, _, value, replicate)
+        component:Connect(function(value, _, _, replicate)
             
-            if not (
-                if typeof(replicate) == "boolean" then replicate
-                else component.autoReplicate
-            ) then return end
+            if not ( if typeof(replicate) == "boolean" then replicate else component.autoReplicate ) then return end
             
             if component.authority == "server" then
                 QuillServiceNetwork.ComponentChangedServer.sendToList({
@@ -283,9 +280,9 @@ function Module.SetPlayerData(self: Module, player: Player, data: QuillServiceTy
                 if not component then continue end
                 
                 if typeof(thisComponent.convert) == "function" then
-                    thisComponent(thisComponent.convert(component:SafeGet()) or thisComponent:SafeGet())
+                    thisComponent:SafeWrite(thisComponent.convert(component:SafeGet()) or component:SafeGet())
                 elseif thisComponent:TypeEqual(component) then
-                    thisComponent(component:SafeGet())
+                    thisComponent:SafeWrite(component:SafeGet())
                 end
             end
         else
@@ -391,7 +388,7 @@ function Module.Init(self: Module, properties: QuillServiceTypes.Properties): Qu
         
         if not value or value.component.authority ~= "client" then return end
         
-        value.component(value.component:Deserialize(_data.data, true), _data.replicate)
+        value.component:SafeWrite(value.component:Deserialize(_data.data, true), _data.replicate)
     end)
     
     return self.PlayersData

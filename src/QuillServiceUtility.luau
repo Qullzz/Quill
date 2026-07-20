@@ -5,7 +5,10 @@ local QuillServiceTypes = require(script.Parent.QuillServiceTypes)
 
 local Module = {}
 
-function Module.GetTemplateSchema(template: QuillServiceTypes.PlayerData): { { key: QuillServiceTypes.PlayerDataKey, component: QuillServiceTypes.Component } }
+function Module.GetTemplateSchema(template: QuillServiceTypes.PlayerData): {{
+    key: QuillServiceTypes.PlayerDataKey,
+    component: QuillServiceTypes.PlayerDataValue
+}}
     local keys: { QuillServiceTypes.PlayerDataKey } = {}
     
     for key, _ in pairs(template) do
@@ -34,7 +37,7 @@ function Module.SerializePlayerData(data: QuillServiceTypes.PlayerData): buffer
     for _, value in ipairs(schema) do
         local buff = value.component:Serialize()
         
-        totalSize += buffer.len(buff)
+        totalSize += value.component:Size(buff)
         
         table.insert(buffs, buff)
     end
@@ -43,8 +46,8 @@ function Module.SerializePlayerData(data: QuillServiceTypes.PlayerData): buffer
     
     local offset = 0
     
-    for _, buff in ipairs(buffs) do
-        local size = buffer.len(buff)
+    for index, buff in ipairs(buffs) do
+        local size = schema[index].component:Size(buff)
         
         buffer.copy(result, offset, buff)
         
@@ -64,14 +67,19 @@ function Module.DeserializePlayerData(template: QuillServiceTypes.PlayerData, da
     for _, value in ipairs(schema) do
         local component = result[value.key]
         
-        local size = buffer.len(component:Serialize())
+        local thisSize = buffer.len(dataBuff) - offset
+        local thisBuff = buffer.create(thisSize)
+        
+        buffer.copy(thisBuff, 0, dataBuff, offset, thisSize)
+        
+        local size = component:Size(thisBuff)
         local buff = buffer.create(size)
         
         buffer.copy(buff, 0, dataBuff, offset, size)
         
         offset += size
         
-        component(component:Deserialize(buff))
+        component:SafeWrite(component:Deserialize(buff))
     end
     
     return result

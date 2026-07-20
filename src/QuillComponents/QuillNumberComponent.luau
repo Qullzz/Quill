@@ -21,47 +21,48 @@ export type Component = QuillServiceTypes.Component<Type, Base> & QuillGenericBa
 local Module = setmetatable({} :: Base, QuillGenericBase)
 
 function Module.Clone(self, value)
-    return New(self.autoReplicate, self.authority, self.numberType, value or self(), self.convert)
+    return New(self.autoReplicate, self.authority, self.numberType, value or self:SafeGet(), self.convert)
 end
 
 function Module.TypeEqual(self, component)
     return ( typeof(self) == typeof(component) )
+        and ( rawequal(getmetatable(self), getmetatable(component)) )
         and ( self.numberType == component.numberType )
-        and ( typeof(self()) == typeof(component:SafeGet()) )
 end
 
-function Module.Serialize(self, _)
-    local size =
-        ( ( self.numberType == "u8" or self.numberType == "i8" ) and 1 )
+function Module.Size(self, _)
+    return ( ( self.numberType == "u8" or self.numberType == "i8" ) and 1 )
         or ( ( self.numberType == "u16" or self.numberType == "i16" ) and 2 )
         or ( ( self.numberType == "u32" or self.numberType == "i32" or self.numberType == "f32" ) and 4 )
         or 8
-    
-    local result = buffer.create(size)
+end
+
+function Module.Serialize(self, _)
+    local result = buffer.create(self:Size())
     
     if self.numberType == "u8" then
-        buffer.writeu8(result, 0, self())
+        buffer.writeu8(result, 0, math.round(self:SafeGet()))
     elseif self.numberType == "u16" then
-        buffer.writeu16(result, 0, self())
+        buffer.writeu16(result, 0, math.round(self:SafeGet()))
     elseif self.numberType == "u32" then
-        buffer.writeu32(result, 0, self())
+        buffer.writeu32(result, 0, math.round(self:SafeGet()))
     elseif self.numberType == "i8" then
-        buffer.writei8(result, 0, self())
+        buffer.writei8(result, 0, math.round(self:SafeGet()))
     elseif self.numberType == "i16" then
-        buffer.writei16(result, 0, self())
+        buffer.writei16(result, 0, math.round(self:SafeGet()))
     elseif self.numberType == "i32" then
-        buffer.writei32(result, 0, self())
+        buffer.writei32(result, 0, math.round(self:SafeGet()))
     elseif self.numberType == "f32" then
-        buffer.writef32(result, 0, self())
+        buffer.writef32(result, 0, self:SafeGet())
     else
-        buffer.writef64(result, 0, self())
+        buffer.writef64(result, 0, self:SafeGet())
     end
     
     return result
 end
 
 function Module.Deserialize(self, buff, _)
-    local result = self()
+    local result = self:SafeGet()
     
     if self.numberType == "u8" then
         result = buffer.readu8(buff, 0)
@@ -85,7 +86,13 @@ function Module.Deserialize(self, buff, _)
 end
 
 function Module.SafeWrite(self, value)
-    self.value = value
+    if value and typeof(self:SafeGet()) == typeof(value) and self:SafeGet() ~= value then
+        local prevValue = self:SafeGet()
+        
+        self.value = value
+        
+        self:Fire(value, prevValue)
+    end
 end
 
 function Module.SafeGet(self)
@@ -93,24 +100,12 @@ function Module.SafeGet(self)
 end
 
 function Module.__eq(self, component)
-    return ( self:TypeEqual(component) ) and ( self() == component:SafeGet() )
+    return ( self:TypeEqual(component) ) and ( self:SafeGet() == component:SafeGet() )
 end
 
 function Module.__call(self, value, replicate)
-    if value and typeof(self()) == typeof(value) and self:SafeGet() ~= value then
-        local previousValue = self()
-        
+    if value then
         self:SafeWrite(value)
-        
-        for _, callback in ipairs(self._callbacks) do
-            if callback.once then
-                callback.callback(value, previousValue, replicate)
-                
-                callback.disconnect()
-            else
-                callback.callback(value, previousValue, callback.disconnect, replicate)
-            end
-        end
     end
     
     return self:SafeGet()
@@ -122,13 +117,13 @@ function New(
     autoReplicate: QuillServiceTypes.ComponentAutoReplicate,
     authority: QuillServiceTypes.ComponentAuthority,
     numberType: numberType,
-    value: Type,
+    value: Type?,
     convert: QuillServiceTypes.ComponentConvert<Type>?
 ): Component
     local result = setmetatable({
         autoReplicate = autoReplicate,
         authority = authority,
-        value = value,
+        value = value or 0,
         
         convert = convert,
         

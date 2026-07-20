@@ -11,8 +11,9 @@ export type BaseWriteCall<T> = { __call: ( self: component<T>, value: T?, replic
 export type ComponentWriteCall<T> = ( value: T?, replicate: boolean? ) -> T
 
 export type Base<T, V, M = {}> = QuillServiceTypes.Base<T, V> & M & {
-    Fire: ( self: QuillServiceTypes.Component, value: any, prevValue: any, replicate: boolean? ) -> ()
+    Fire: ( self: QuillServiceTypes.Component, value: V, prevValue: V, replicate: boolean? ) -> ()
 }
+export type Component<T, B, M = {}> = QuillServiceTypes.Component<T, B> & M
 
 -- // MAIN // --
 
@@ -64,7 +65,8 @@ end
 function Module.TypeEqual(self, component)
     warn("Unimplemented TypeEqual method!", debug.traceback())
     
-    return typeof(self.value) == typeof(component.value)
+    return ( typeof(self) == typeof(component) )
+        and ( rawequal(getmetatable(self), getmetatable(component)) )
 end
 
 function Module.Serialize(self, replication)
@@ -91,6 +93,12 @@ function Module.SafeGet(self)
     return self.value
 end
 
+function Module.Size(self, buff)
+    warn("Unimplemented Size method!", debug.traceback())
+    
+    return if buff then buffer.len(buff) else buffer.len(self:Serialize())
+end
+
 function Module.__eq(self, component)
     warn("Unimplemented __eq meta-method!", debug.traceback())
     
@@ -104,7 +112,9 @@ function Module.__call(self)
 end
 
 function Module.Fire(self, value, prevValue, replicate)
-    for _, callback in ipairs(self._callbacks) do
+    for i = #self._callbacks, 1, -1 do
+        local callback = self._callbacks[i]
+        
         if callback.once then
             callback.callback(value, prevValue, replicate)
             

@@ -13,11 +13,11 @@ local data = Data[Players.LocalPlayer]
 --     warn("SET RANK:", rank)
 -- end)
 
-data:Wait()
+if not data:Wait() then return end
 
 print("Data loaded:", data)
 
 data:Do(function(data)
-    data:Wait() -- This won't yield since it's already loaded
+    data:Wait() -- Won't yield since it's already loaded
     warn("Data loaded", data)
 end)
