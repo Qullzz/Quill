@@ -1,4 +1,5 @@
 -- // SERVICES // --
+local EncodingService = game:GetService("EncodingService")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
@@ -121,6 +122,21 @@ function PlayerDataModule.Wait(self: QuillServiceTypes.PlayerData): QuillService
     end
 end
 
+local function SerializePlayerData(data: QuillServiceTypes.PlayerData): buffer
+    return EncodingService:CompressBuffer(
+        QuillServiceUtility.SerializePlayerData(data),
+        Enum.CompressionAlgorithm.Zstd,
+        22
+    )
+end
+
+local function DeserializePlayerData(template: QuillServiceTypes.PlayerData, buff: buffer): QuillServiceTypes.PlayerData
+    return QuillServiceUtility.DeserializePlayerData(
+        template,
+        EncodingService:DecompressBuffer(buff, Enum.CompressionAlgorithm.Zstd)
+    )
+end
+
 function GetProfileKeyFromPlayer(player: Player)
     return tostring(player.UserId)
 end
@@ -150,7 +166,7 @@ function Module.RegisterPlayer(self: Module, player: Player, profile: Profile)
     
     local template = self:GetTemplateFromID(profile.Data.ID)
     
-    local data = QuillServiceUtility.DeserializePlayerData(template, profile.Data.Data)
+    local data = DeserializePlayerData(template, profile.Data.Data)
     
     local deltas = GetPlayerDataTemplateDeltas(template, self.PlayersData[player])
     
@@ -200,7 +216,7 @@ function Module.PlayerAdded(self: Module, player: Player)
     
     profile.OnSave:Connect(function()
         profile.Data.ID = self:GetTemplateID(self.Properties.templates.currentTemplate)
-        profile.Data.Data = QuillServiceUtility.SerializePlayerData(self.PlayersData[player])
+        profile.Data.Data = SerializePlayerData(self.PlayersData[player])
     end)
     
     profile.OnSessionEnd:Connect(function()
@@ -345,7 +361,7 @@ function Module.Init(self: Module, properties: QuillServiceTypes.Properties): Qu
         (typeof(self.Properties.environment) == "string" and self.Properties.environment) or (RunService:IsStudio() and "Dev" or "Live"),
         {
             ID = self:GetTemplateID(self.Properties.templates.currentTemplate),
-            Data = QuillServiceUtility.SerializePlayerData(self.Properties.templates.currentTemplate)
+            Data = SerializePlayerData(self.Properties.templates.currentTemplate)
         }
     )
     
