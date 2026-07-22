@@ -1,143 +1,141 @@
 # QuillComponent
 
-A `QuillComponent` is a component that creates Quills serving as a custom data type and can be used for player data (like numbers, strings, enums, vectors, cframes, arrays, dictionaries...). `QuillComponents` are structured like the following:
+A `Base` is a base that creates Components, serving as a custom data type and should be used for player data (like numbers, strings, enums, vectors, cframes, arrays, dictionaries...). `Bases` are structured like the following:
 
-```lua title="QuillComponent.luau"
-local QuillServiceTypes = require(PATH.TO.QuillServiceTypes)
+```lua title="QuillComponent.luau (uses QuillGenericBase)"
+local QuillGenericBase = require("../QuillBases/QuillGenericBase")
+local QuillServiceTypes = require("../QuillServiceTypes")
 
-type Type = *Some Roblox type here*
-type Metadata = *Custom metadata here*
-
-local Module: QuillServiceTypes.QuillBase<Type, Metadata>
-
-Module = {
-    New = function(auto_replicate, authority, meta_data, value, convert)
-        return setmetatable({
-            auto_replicate = auto_replicate,
-            authority = authority,
-            meta_data = meta_data,
-            value = value,
-            
-            convert = convert,
-            
-            _callbacks = {}
-        }, Module)
-    end,
+export type Type = *Some Type Here*
+export type Data = { *Some Data Here*
     
-    Clone = function(self)
-        return Module.New(self.auto_replicate, self.authority, self.meta_data, self.value, self.convert)
-    end,
-    
-    Once = function(self, callback)
-        local tab
-        
-        local function disconnect()
-            table.remove(self._callbacks, table.find(self._callbacks, tab))
-        end
-        
-        tab = {
-            callback = callback,
-            disconnect = disconnect,
-            once = true
-        }
-        
-        table.insert(self._callbacks, tab)
-        
-        return disconnect
-    end,
-    
-    Connect = function(self, callback)
-        local tab
-        
-        local function disconnect()
-            table.remove(self._callbacks, table.find(self._callbacks, tab))
-        end
-        
-        tab = {
-            callback = callback,
-            disconnect = disconnect,
-            once = false
-        }
-        
-        table.insert(self._callbacks, tab)
-        
-        return disconnect
-    end,
-    
-    TypeEqual = function(quill1, quill2)
-        return ( typeof(quill1) == typeof(quill2) )
-            and ( quill1.meta_data == quill2.meta_data )
-            and ( typeof(quill1.value) == typeof(quill2.value) )
-    end,
-    
-    Serialize = function(self)
-        local size = some_size
-        
-        local result = buffer.create(size)
-        
-        return result
-    end,
-    
-    Deserialize = function(self, buff)
-        local result = self()
-        
-        result = buffer.read(buff)
-        
-        return result
-    end,
-    
-    __eq = function(quill1, quill2)
-        return ( quill1:TypeEqual(quill2) ) and ( quill1.value == quill2.value )
-    end,
-    
-    __call = function(self, value, replicate)
-        if typeof(value) == typeof(self.value) and value ~= self.value then
-            local previous_value = self.value
-            
-            self.value = value
-            
-            for _, callback in ipairs(self._callbacks) do
-                if callback.once then
-                    callback.callback(value, previous_value, replicate)
-                    
-                    callback.disconnect()
-                else
-                    callback.callback(value, previous_value, callback.disconnect, replicate)
-                end
-            end
-        end
-        
-        return self.value
-    end
 }
+export type Base = QuillGenericBase.Base<Component, Type, QuillGenericBase.BaseWriteCall<Type> & { *Some Methods Here*
+    
+} & Data>
+export type Component = QuillServiceTypes.Component<Type, Base & QuillGenericBase.ComponentWriteCall<Type> & Data>
+
+local Module = setmetatable({} :: Base, QuillGenericBase)
+
+function Module.Clone(self, value)
+    return New(value or self:SafeGet(), self.autoReplicate, self.authority, self.convert)
+end
+
+function Module.TypeEqual(self, component)
+    return ( typeof(self) == typeof(component) )
+        and ( rawequal(getmetatable(self), getmetatable(component)) )
+end
+
+function Module.Size(self, _)
+    return 0
+end
+
+function Module.Serialize(self, replication)
+    local result = buffer.create(self:Size())
+    
+    *Some Serialization Here*
+    
+    return result
+end
+
+function Module.Deserialize(self, buff, replication)
+    local result = self:SafeGet()
+    
+    *Some Deserialization Here*
+    
+    return result
+end
+
+function Module.SafeWrite(self, value)
+    if typeof(self:SafeGet()) == typeof(value) and self:SafeGet() ~= value then
+        local prevValue = self:SafeGet()
+        
+        self.value = value
+        
+        self:Fire(value, prevValue)
+    end
+end
+
+function Module.SafeGet(self)
+    return self.value
+end
+
+function Module.__eq(self, component)
+    return ( self:TypeEqual(component) ) and ( self:SafeGet() == component:SafeGet() )
+end
+
+function Module.__call(self, value, replicate)
+    if value then
+        self:SafeWrite(value)
+    end
+    
+    return self:SafeGet()
+end
+
+function New(
+    value: Type?,
+    autoReplicate: QuillServiceTypes.ComponentAutoReplicate?,
+    authority: QuillServiceTypes.ComponentAuthority?,
+    convert: QuillServiceTypes.ComponentConvert<Type>?
+): Component
+    local result = setmetatable({
+        autoReplicate = autoReplicate,
+        authority = authority,
+        value = value or 0,
+        
+        convert = convert,
+        
+        _callbacks = {}
+    }, Module) :: Component
+    
+    return result
+end
 
 Module.__index = Module
+
+return New
 ```
 
-### `.New(auto_replicate, authority, meta_data, value, convert) -> Quill`
+### `New(..., auto_replicate, authority, convert) -> Component`
 
-Creates and returns a new Quill.
+Creates and returns a new `Component`.
 
-### `:Clone(self) -> Quill`
+### `:Clone(self) -> Component`
 
-Clones a Quill.
+Clones a `Component`.
 
 ### `:Once(self, callback) -> disconnect`
 
-Connects to a Quill changed event, disconnect immediately after the first one.
+Connects to a `Component` changed event, disconnect immediately after the first one.
 
 ### `:Connect(self, callback) -> disconnect`
 
-Connects to a Quill changed event.
+Connects to a `Component` changed event.
 
-### `:TypeEqual(quill1, quill2) -> boolean`
+### `:TypeEqual(self, component) -> boolean`
 
-Check for type equality between to Quills.
+Check if two `Component` are equal in type.
 
-### `:Serialize(self) -> buffer`
+### `:Size(self, buff) -> number`
 
-Serialize a Quill, return a buffer that describes it.
+Returns the size of the `Component` in bytes, optionally takes a buffer to read it's size instead. (mainly for dynamic `Components` like `Arrays`)
 
-### `Deserialize(self, buffer) -> Quill`
+### `:Serialize(self, replication) -> buffer`
 
-Deserialize a Quill, receive
+Serializes a `Component`, return a buffer that describes it.
+
+### `Deserialize(self, buff, replication) -> Compnoent`
+
+Deserializes a `Component`, receives a buffer to deserialize
+
+### `SafeWrite: ( self: T, value: V ) -> ()`
+
+Safely writes a value into the `Component`
+
+### `SafeGet: ( self: T ) -> V`
+
+Safely reads a values of the `Component`
+
+### `__eq: ( self: T, component: T ) -> boolean`
+
+A metamethod that takes two `Component` to check if their equal. (from the equal operator '==')

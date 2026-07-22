@@ -7,12 +7,13 @@ local QuillServiceTypes = require("../QuillServiceTypes")
 export type numberType = "u8" | "u16" | "u32" | "i8" | "i16" | "i32" | "f32" | "f64"
 
 export type Type = number
-export type Base = QuillGenericBase.Base<Component, Type, QuillGenericBase.BaseWriteCall<Type> & {
-    
-}>
-export type Component = QuillServiceTypes.Component<Type, Base> & QuillGenericBase.ComponentWriteCall<Type> & {
+export type Data = {
     numberType: numberType
 }
+export type Base = QuillGenericBase.Base<Component, Type, QuillGenericBase.BaseWriteCall<Type> & {
+    
+} & Data>
+export type Component = QuillServiceTypes.Component<Type, Base & QuillGenericBase.ComponentWriteCall<Type> & Data>
 
 -- // MAIN // --
 
@@ -20,8 +21,10 @@ export type Component = QuillServiceTypes.Component<Type, Base> & QuillGenericBa
 
 local Module = setmetatable({} :: Base, QuillGenericBase)
 
+Module.numberType = "u8"
+
 function Module.Clone(self, value)
-    return New(self.autoReplicate, self.authority, self.numberType, value or self:SafeGet(), self.convert)
+    return New(self.numberType, value or self:SafeGet(), self.autoReplicate, self.authority, self.convert)
 end
 
 function Module.TypeEqual(self, component)
@@ -86,7 +89,7 @@ function Module.Deserialize(self, buff, _)
 end
 
 function Module.SafeWrite(self, value)
-    if value and typeof(self:SafeGet()) == typeof(value) and self:SafeGet() ~= value then
+    if typeof(self:SafeGet()) == typeof(value) and self:SafeGet() ~= value then
         local prevValue = self:SafeGet()
         
         self.value = value
@@ -111,13 +114,11 @@ function Module.__call(self, value, replicate)
     return self:SafeGet()
 end
 
--- ## PRIVATE ## --
-
 function New(
-    autoReplicate: QuillServiceTypes.ComponentAutoReplicate,
-    authority: QuillServiceTypes.ComponentAuthority,
-    numberType: numberType,
+    numberType: numberType?,
     value: Type?,
+    autoReplicate: QuillServiceTypes.ComponentAutoReplicate?,
+    authority: QuillServiceTypes.ComponentAuthority?,
     convert: QuillServiceTypes.ComponentConvert<Type>?
 ): Component
     local result = setmetatable({
@@ -130,7 +131,7 @@ function New(
         _callbacks = {}
     }, Module) :: Component
     
-    result.numberType = numberType
+    result.numberType = numberType or "u8"
     
     return result
 end

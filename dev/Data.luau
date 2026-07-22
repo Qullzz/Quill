@@ -5,7 +5,7 @@ local Quill = require("./Quill")
 
 return Quill.Init({
     mock = false,
-    reset = false,
+    reset = true,
     
     templates = {
         previousTemplates = {
@@ -13,8 +13,22 @@ return Quill.Init({
         },
         
         currentTemplate = {
-            -- rank = Quill.Number(true, "server", "u16", 1),
-            inventory = Quill.Array(false, "server", Quill.Number(true, "server", "u8"), 0)
+            rank = Quill.Number("u16", 1),
+            groupName = Quill.String("lw4"),
+            inventory = Quill.Array(Quill.Number(), 0),
+            config = Quill.Map({
+                graphics = Quill.Map({
+                    level = Quill.Number()
+                }),
+                keybinds = Quill.Map({
+                    openMenu = Quill.Enum(Enum.KeyCode.M)
+                }),
+                volume = Quill.Map({
+                    global = Quill.Number(),
+                    sfx = Quill.Number(),
+                    music = Quill.Number()
+                })
+            })
         }
     }
 })

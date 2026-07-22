@@ -9,6 +9,9 @@ const BUFFER_COUNT_SIZE = 2
 -- // TYPES // --
 
 type Type<T> = { T }
+export type Data<T> = {
+    component: T
+}
 type Base<T, V> = QuillGenericBase.Base<Component<T, V>, Type<T>, QuillGenericBase.BaseReadCall<Type<T>> & {
     --[[
     Returns the Component at the specified index.
@@ -35,6 +38,10 @@ type Base<T, V> = QuillGenericBase.Base<Component<T, V>, Type<T>, QuillGenericBa
     ]]
     Pop: ( self: Component<T, V>, replicate: QuillServiceTypes.BaseReplicate? ) -> Component<T, V>,
     --[[
+    Clears the Array.
+    ]]
+    Clear: ( self: Component<T, V> ) -> Component<T, V>,
+    --[[
     Sorts the Array using the provided comparison callback.
     ]]
     Sort: ( self: Component<T, V>, callback: ( self: T, component: T ) -> boolean, replicate: QuillServiceTypes.BaseReplicate? ) -> Component<T, V>,
@@ -52,18 +59,19 @@ type Base<T, V> = QuillGenericBase.Base<Component<T, V>, Type<T>, QuillGenericBa
     ]]
     Match: ( self: Component<T, V>, callback: ( component: T ) -> boolean ) -> T?,
     --[[
-    Returns whether every Component passes the provided callback.
+    Checks whether every Component passes the provided callback.
     ]]
     Every: ( self: Component<T, V>, callback: ( component: T ) -> boolean ) -> boolean,
+    --[[
+    Checks whether any Component passes the provided callback.
+    ]]
+    Some: ( self: Component<T, V>, callback: ( component: T ) -> boolean ) -> boolean,
     --[[
     Splits the Array into groups of the specified size.
     ]]
     Chunks: ( self: Component<T, V>, size: number ) -> { { T } }
-}>
-type Component<T, V> = QuillGenericBase.Component<Type<T>, Base<T, V> & QuillGenericBase.ComponentReadCall<Type<T>> & {
-    component: T
-}>
-
+} & Data<T>>
+type Component<T, V> = QuillGenericBase.Component<Type<T>, Base<T, V> & QuillGenericBase.ComponentReadCall<Type<T>> & Data<T>>
 
 -- // MAIN // --
 
@@ -91,10 +99,12 @@ local Module = setmetatable({} :: Base<QuillServiceTypes.Component<any, QuillSer
 function Module.Clone(self, value)
     local component = self.component:Clone()
     
-    local result = New(self.autoReplicate, self.authority, component, component:SafeGet(), self.convert)
+    local result = New(component, component:SafeGet(), self.autoReplicate, self.authority, self.convert)
     
     if value then
         result:SafeWrite(value)
+    else
+        result:SafeWrite(QuillServiceUtility.CopyTemplate(self:SafeGet()))
     end
     
     return result
@@ -154,7 +164,7 @@ function Module.Serialize(self, replication)
     
     local offset = BUFFER_COUNT_SIZE
     
-    for _, buff in buffs do
+    for _, buff in ipairs(buffs) do
         buffer.copy(result, offset, buff)
         
         offset += self.component:Size(buff)
@@ -196,10 +206,12 @@ function Module.Deserialize(self, buff, replication)
 end
 
 function Module.SafeWrite(self, value)
-    table.clear(self.value)
+    self:Clear()
     
-    for _, component in value do
-        table.insert(self.value, component)
+    local array = self:SafeGet()
+    
+    for _, component in ipairs(value) do
+        table.insert(array, component)
     end
 end
 
@@ -208,7 +220,19 @@ function Module.SafeGet(self)
 end
 
 function Module.__eq(self, component)
-    return ( self:TypeEqual(component) )
+    
+    if not self:TypeEqual(component) then return false end
+    
+    local array = self:SafeGet()
+    
+    for _, value in ipairs(array) do
+        
+        if value == component then continue end
+        
+        return false
+    end
+    
+    return true
 end
 
 function Module.__call(self)
@@ -293,8 +317,16 @@ function Module.Pop(self, replicate)
     return self
 end
 
+function Module.Clear(self)
+    local array = self:SafeGet()
+    
+    table.clear(array)
+    
+    return self
+end
+
 function Module.Sort(self, callback, replicate)
-    local array = self()
+    local array = self:SafeGet()
     
     local prevArray = QuillServiceUtility.CopyTemplate(array)
     
@@ -357,7 +389,9 @@ function Module.Map(self, callback)
 end
 
 function Module.Match(self, callback)
-    for _, component in self:SafeGet() do
+    local array = self:SafeGet()
+    
+    for _, component in ipairs(array) do
         
         if not callback(component) then continue end
         
@@ -380,6 +414,19 @@ function Module.Every(self, callback)
     return true
 end
 
+function Module.Some(self, callback)
+    local array = self:SafeGet()
+    
+    for _, component in ipairs(array) do
+        
+        if not callback(component) then continue end
+        
+        return true
+    end
+    
+    return false
+end
+
 function Module.Chunks(self, size)
     local array = self:SafeGet()
     
@@ -389,7 +436,7 @@ function Module.Chunks(self, size)
     local chunk = {}
     local chunkSize = 0
     
-    for _, value in array do
+    for _, value in ipairs(array) do
         
         table.insert(chunk, value)
         
@@ -410,13 +457,11 @@ function Module.Chunks(self, size)
     return result
 end
 
--- ## PRIVATE ## --
-
 function New<T, V>(
-    autoReplicate: QuillServiceTypes.ComponentAutoReplicate,
-    authority: QuillServiceTypes.ComponentAuthority,
     component: T,
     value: V?,
+    autoReplicate: QuillServiceTypes.ComponentAutoReplicate?,
+    authority: QuillServiceTypes.ComponentAuthority?,
     convert: QuillServiceTypes.ComponentConvert<Type<T>>?
 ): Component<T, V>
     local result = setmetatable({
@@ -430,7 +475,7 @@ function New<T, V>(
     }, Module) :: Component<T, V>
     
     if value then
-        ((component :: any).component :: any):SafeWrite(value)
+        ( ( component :: any ) :: QuillServiceTypes.Component<any, QuillServiceTypes.Base>):SafeWrite(value)
     end
     
     result.component = component

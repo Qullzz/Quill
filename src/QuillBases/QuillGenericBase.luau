@@ -20,6 +20,9 @@ export type Component<T, B, M = {}> = QuillServiceTypes.Component<T, B> & M
 local Module = {} :: Base<QuillServiceTypes.Component, any>
 Module.__index = Module
 
+Module.autoReplicate = true
+Module.authority = "server"
+
 function Module.Clone(self, _)
     warn("Unimplemented Clone method!", debug.traceback())
     

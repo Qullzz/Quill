@@ -9,55 +9,14 @@ local Data = require(ReplicatedStorage.Data)
 
 local data = Data[Players.PlayerAdded:Wait()]
 
-data.inventory:Connect(function(value, prevValue)
-    print(`Changed inventory:`, prevValue, "->", value)
+data.rank:Connect(function(rank, prevRank)
+    warn(`Changed rank: {prevRank} -> {rank}`)
 end)
 
 data:Do(function(data)
-    -- print(data.inventory())
+    print("Current Data:", data)
     
-    -- data.inventory:Map(function(component)
-    --     component(math.random(1, 2))
-        
-    --     return component
-    -- end)
+    print(`Current rank: {data.rank()}`)
     
-    -- warn(data.inventory())
-    
-    while task.wait(2) do
-        data.inventory:Append(math.random(0, 255))
-    end
+    data.rank(data.rank() + 1)
 end)
-
--- data.inventory:Connect(function(value, prev_value)
---     print(`Changed inventory`, prev_value, value)
--- end)
-
--- data:Do(function(data)
---     while task.wait(2) do
---         table.insert(data.inventory(), Quill.Number.New(true, "server", "u8", 0))
-        
---         data.inventory(data.inventory())
---     end
--- end)
-
--- data.rank:Once(function(rank)
---     warn("SET RANK:", rank)
--- end)
-
--- if not data:Wait() then return end
-
--- print("Data loaded:", data)
-
--- data:Do(function(data)
---     data:Wait() -- This won't yield since it's already loaded
---     warn("Data loaded", data)
-    
---     while task.wait(math.random(2, 3)) do
---         local inventory = data.inventory()
-        
---         table.insert(inventory, Quill.Number.New(true, "server", "u8", 0))
-        
---         data.inventory(inventory)
---     end
--- end)

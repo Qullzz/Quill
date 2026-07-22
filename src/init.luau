@@ -21,7 +21,13 @@ type PlayersData<T> = QuillServiceTypes.PlayersData<T & {
 
 return {
     Number = require("@self/QuillComponents/QuillNumberComponent"),
+    String = require("@self/QuillComponents/QuillStringComponent"),
+    Enum = require("@self/QuillComponents/QuillEnumComponent"),
     Array = require("@self/QuillComponents/QuillArrayComponent"),
+    Map = require("@self/QuillComponents/QuillMapComponent"),
+    Vector2 = require("@self/QuillComponents/QuillVector2Component"),
+    Vector3 = require("@self/QuillComponents/QuillVector3Component"),
+    CFrame = require("@self/QuillComponents/QuillCFrameComponent"),
     
     Init = function<T>(properties: QuillServiceTypes.Properties<T>): PlayersData<T>
         return (RunService:IsServer() and require("@self/QuillServiceServer"):Init(properties) or require("@self/QuillServiceClient"):Init(properties)) :: any

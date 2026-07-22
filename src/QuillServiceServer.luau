@@ -151,6 +151,7 @@ function Module.RegisterPlayer(self: Module, player: Player, profile: Profile)
     local template = self:GetTemplateFromID(profile.Data.ID)
     
     local data = QuillServiceUtility.DeserializePlayerData(template, profile.Data.Data)
+    
     local deltas = GetPlayerDataTemplateDeltas(template, self.PlayersData[player])
     
     for key, value in pairs(deltas) do
