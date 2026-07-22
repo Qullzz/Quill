@@ -1,30 +1,6 @@
 {
   "name": "quill",
   "tree": {
-    "$className": "DataModel",
-    
-    "ReplicatedStorage": {
-      "Quill": {
-        "$path": "src"
-      },
-      
-      "Data": {
-        "$path": "dev/Data.luau"
-      }
-    },
-    
-    "ServerScriptService": {
-      "Server": {
-        "$path": "dev/Server.server.luau"
-      }
-    },
-    
-    "StarterPlayer": {
-      "StarterPlayerScripts": {
-        "Client": {
-          "$path": "dev/Client.client.luau"
-        }
-      }
-    }
+    "$path": "src"
   }
 }
